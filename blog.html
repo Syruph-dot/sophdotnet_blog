@@ -29,11 +29,11 @@
         .blog-post-title {
             font-size: 16px;
             font-weight: 600;
-            color: #333;
+            color: inherit;
             margin-bottom: 8px;
         }
         .blog-post-title a {
-            color: #333;
+            color: inherit;
             text-decoration: none;
         }
         .blog-post-title a:hover {
@@ -46,7 +46,7 @@
         }
         .blog-post-excerpt {
             font-size: 14px;
-            color: #555;
+            color: inherit;
             line-height: 1.4;
             margin-bottom: 10px;
         }
@@ -59,6 +59,35 @@
         }
         .blog-post-readmore a:hover {
             text-decoration: underline;
+        }
+        
+        /* 主题适配 */
+        .theme-a .home-links {
+            background: #2a2a2a;
+            border-bottom: 1px solid #444;
+        }
+        .theme-a .home-links a {
+            color: #ccc;
+        }
+        .theme-a .home-links a:hover {
+            color: white;
+        }
+        .theme-a .blog-post-meta {
+            color: #aaa;
+        }
+        .theme-b .home-links {
+            background: #f0f8ff;
+            border-bottom: 1px solid #b8daff;
+        }
+        .theme-b .home-links a {
+            color: #4a90e2;
+        }
+        .theme-b .home-links a:hover {
+            color: #2e7cd6;
+        }
+        .theme-e .home-links {
+            background: #fff9df;
+            border-bottom: 1px solid #f7c942;
         }
     </style>
 </head>
