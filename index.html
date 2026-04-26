@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>千年民科网络 - Soph Dot Net</title>
+    <link rel="stylesheet" href="css/mobile-framework.css">
+    <style>
+        body {
+            background: #f5f5f5;
+        }
+        .banner {
+            width: 100%;
+            max-width: 600px;
+            height: 200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #e0e0e0, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: var(--bg-image, linear-gradient(135deg, #e0e0e0, #f0f0f0));
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(8px);
+            transform: scale(1.1);
+            z-index: 0;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        .banner.fade-out::before {
+            opacity: 0;
+        }
+        .banner .slides {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        .banner .slide {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .banner img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        .home-links {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            text-align: right;
+        }
+        .home-links a {
+            color: #666;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .home-links a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+        .column {
+            text-align: center;
+            padding: 15px 10px;
+        }
+        .column-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #f0f0f0, #e8e8e8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 12px;
+        }
+        .column-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .column-desc {
+            font-size: 12px;
+            color: #888;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .grid-1 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body class="theme-c">
+    <div class="page">
+        <div class="header text-left" style="display: flex; align-items: center; justify-content: left; padding: 10px 10px;">
+            <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
+        </div>
+        <div class="home-links">
+            <a href="#" onclick="setHomepage()">设为主页</a>
+            <a href="https://www.baidu.com" target="_blank">baidu.com</a>
+            <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
+            <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
+            <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
+        </div>
+        <div class="banner">
+            <div class="slides">
+                <div class="slide">
+                    <img src="images/banner4t3-1.PNG" alt="Banner 1">
+                </div>
+                <div class="slide">
+                    <img src="images/banner-2.webp" alt="Banner 2">
+                </div>
+                <div class="slide">
+                    <img src="images/banner-artifact-1.png" alt="Banner 3">
+                </div>
+                <div class="slide">
+                    <img src="images/banner-artifact-2.png" alt="Banner 4">
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 设为主页功能
+            function setHomepage() {
+                const url = window.location.href;
+                try {
+                    if (window.netscape) {
+                        // Firefox
+                        window.netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+                        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+                        prefs.setCharPref("browser.startup.homepage", url);
+                        alert("已成功设置为主页");
+                    } else if (window.external) {
+                        // IE
+                        window.external.AddFavorite(url, "千年民科网络");
+                        alert("已成功设置为主页");
+                    } else if (window.sidebar) {
+                        // Opera
+                        alert("请使用浏览器菜单将本站设置为主页");
+                    } else {
+                        // Chrome, Safari等
+                        alert("请使用浏览器菜单将本站设置为主页");
+                    }
+                } catch (e) {
+                    alert("设置为主页失败，请手动设置");
+                }
+            }
+
+            // Banner轮播功能
+            let currentSlide = 0;
+            const slides = document.querySelector('.slides');
+            const totalSlides = 4;
+            const banner = document.querySelector('.banner');
+
+            function updateBackground() {
+                const currentImg = slides.querySelectorAll('.slide img')[currentSlide];
+                if (currentImg) {
+                    banner.style.setProperty('--bg-image', `url(${currentImg.src})`);
+                }
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                
+                // 添加淡出效果
+                banner.classList.add('fade-out');
+                
+                // 等待过渡完成后更新背景
+                setTimeout(() => {
+                    updateBackground();
+                    updateSlide();
+                    
+                    // 移除淡出类，实现淡入效果
+                    banner.classList.remove('fade-out');
+                }, 250);
+            }
+
+            function updateSlide() {
+                slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+
+            // 初始化背景
+            updateBackground();
+
+            // 每5秒自动切换
+            setInterval(nextSlide, 5000);
+        </script>
+
+        <div class="content">
+            <!-- 导航节 -->
+            <div class="section">
+                <div class="section-title">导航</div>
+                <div class="grid-3">
+                    <div class="column">
+                        <div class="column-icon">[Image]</div>
+                        <div class="column-title">博客</div>
+                        <div class="column-desc">技术分享与思考</div>
+                    </div>
+                    <div class="column">
+                        <div class="column-icon"> <a href="http://mcss.sophdotnet.com.cn/" target="_blank">[Image]</a></div>
+                        <div class="column-title"> <a href="http://mcss.sophdotnet.com.cn/" target="_blank">MCSS-千年民科网络底刊</a></div>
+                        <div class="column-desc">欢迎投递</div>
+                    </div>
+                    <div class="column">
+                        <div class="column-icon">[Image]</div>
+                        <div class="column-title">土豆网TV</div>
+                        <div class="column-desc">低音画质媒体，Artifact艺术</div>
+                    </div>
+                    <div class="column">
+                        <div class="column-icon">[Image]</div>
+                        <div class="column-title">更多内容</div>
+                        <div class="column-desc">持续更新中</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 友情链接节 -->
+            <div class="section">
+                <div class="section-title">友情链接</div>
+                <div class="grid-1">
+                    <div class="column">
+                        <div class="column-icon">[Image]</div>
+                        <div class="column-title">广告位招租</div>
+                        <div class="column-desc">联系我们获取更多信息</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 千年民科网络 Soph Dot Net
+        </div>
+    </div>
+</body>
+</html>
