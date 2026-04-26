@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>千年民科网络 - Soph Dot Net</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
     <style>
         body {
@@ -250,7 +251,20 @@
             // 页面加载时加载保存的主题
             window.onload = function() {
                 loadSavedTheme();
+                startFaviconRotation();
             };
+
+            // Favicon轮换功能
+            let faviconIndex = 0;
+            const favicons = ['icon01.gif', 'icon02.gif', 'icon03.gif'];
+            
+            function startFaviconRotation() {
+                setInterval(() => {
+                    faviconIndex = (faviconIndex + 1) % favicons.length;
+                    const favicon = document.getElementById('favicon');
+                    favicon.href = favicons[faviconIndex];
+                }, 5000); // 每5秒切换一次
+            }
         </script>
 
         <div class="content">

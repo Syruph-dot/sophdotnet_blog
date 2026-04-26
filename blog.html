@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>博客 - 千年民科网络</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
     <style>
         .home-links {
@@ -202,7 +203,20 @@
         // 页面加载时加载保存的主题
         window.onload = function() {
             loadSavedTheme();
+            startFaviconRotation();
         };
+
+        // Favicon轮换功能
+        let faviconIndex = 0;
+        const favicons = ['icon01.png', 'icon02.png', 'icon03.png'];
+        
+        function startFaviconRotation() {
+            setInterval(() => {
+                faviconIndex = (faviconIndex + 1) % favicons.length;
+                const favicon = document.getElementById('favicon');
+                favicon.href = favicons[faviconIndex];
+            }, 5000); // 每5秒切换一次
+        }
     </script>
 </body>
 </html>
