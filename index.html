@@ -6,6 +6,8 @@
     <title>千年民科网络 - Soph Dot Net</title>
     <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
+    <link rel="stylesheet" href="https://unpkg.com/github-calendar@latest/dist/github-calendar.css" />
+    <script src="https://unpkg.com/github-calendar@latest/dist/github-calendar.min.js"></script>
     <style>
         body {
             background: #f5f5f5;
@@ -122,9 +124,174 @@
             grid-template-columns: 1fr;
             gap: 10px;
         }
+        .github-calendar {
+            margin-top: 10px;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .github-calendar .calendar {
+            width: 100%;
+            max-width: 600px;
+            min-width: 300px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1), rgba(72, 209, 204, 0.15), rgba(175, 238, 238, 0.1));
+            box-shadow: 
+                0 4px 15px rgba(64, 224, 208, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 0 rgba(0, 139, 139, 0.2);
+            border: 1px solid rgba(64, 224, 208, 0.3);
+        }
+        .github-calendar .calendar::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+            border-radius: 50%;
+            animation: bubbleFloat 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .github-calendar .calendar::after {
+            content: '';
+            position: absolute;
+            bottom: 15%;
+            left: 15%;
+            width: 15%;
+            height: 15%;
+            background: radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+            border-radius: 50%;
+            animation: bubbleFloat 5s ease-in-out infinite reverse;
+            pointer-events: none;
+        }
+        .github-calendar .calendar .width-full {
+            max-width: 100% !important;
+            width: auto !important;
+        }
+        .github-calendar .contribution-activity {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .github-calendar .js-contribution-graph {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .github-calendar .width-full {
+            max-width: 100% !important;
+        }
+        .github-calendar table {
+            max-width: 100%;
+            width: auto !important;
+        }
+        .github-calendar .day {
+            border-radius: 3px;
+        }
+        .github-calendar .day[data-level="0"] {
+            background-color: rgba(64, 224, 208, 0.05);
+        }
+        .github-calendar .day[data-level="1"] {
+            background-color: rgba(64, 224, 208, 0.25);
+        }
+        .github-calendar .day[data-level="2"] {
+            background-color: rgba(64, 224, 208, 0.5);
+        }
+        .github-calendar .day[data-level="3"] {
+            background-color: rgba(64, 224, 208, 0.75);
+        }
+        .github-calendar .day[data-level="4"] {
+            background-color: rgba(64, 224, 208, 1);
+            box-shadow: 0 0 8px rgba(64, 224, 208, 0.6);
+        }
+        @keyframes bubbleFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-3px) scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* 自定义滑块样式 */
+        .custom-slider {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 20px;
+            font-size: 0;
+        }
+        .custom-slider input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 5;
+            margin: 0;
+            padding: 0;
+        }
+        .custom-slider-left {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 10px;
+            height: 20px;
+            background: url('images/BarL.png') no-repeat center;
+            background-size: cover;
+            filter: url(#remove-black);
+            z-index: 3;
+        }
+        .custom-slider-fill {
+            position: absolute;
+            left: 10px;
+            top: 0;
+            height: 20px;
+            width: 0px;
+            background: url('images/BarF.png') repeat-x center;
+            background-size: auto 100%;
+            background-color: transparent;
+            z-index: 1;
+        }
+        .custom-slider-right {
+            position: absolute;
+            top: 0;
+            width: 10px;
+            height: 20px;
+            background: url('images/BarR.png') no-repeat center;
+            background-size: cover;
+            filter: url(#remove-black);
+            z-index: 3;
+        }
+        .custom-slider-thumb {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: url('images/BarR.png') no-repeat center;
+            background-size: contain;
+            pointer-events: none;
+            z-index: 4;
+            transform: translateX(-50%);
+        }
     </style>
 </head>
 <body class="theme-c">
+    <svg style="display: none;">
+        <filter id="remove-black" x="-50%" y="-50%" width="200%" height="200%">
+            <feColorMatrix type="matrix" values="
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                1 1 1 1 -1
+            " result="inverse"/>
+            <feComposite in="SourceGraphic" in2="inverse" operator="arithmetic" k2="1" k3="-1" k1="0" result="transparent"/>
+            <feBlend in="transparent" in2="SourceGraphic" mode="normal"/>
+        </filter>
+    </svg>
     <div class="page">
         <div class="header text-left">
             <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
@@ -256,7 +423,7 @@
 
             // Favicon轮换功能
             let faviconIndex = 0;
-            const favicons = ['icon01.gif', 'icon02.gif', 'icon03.gif'];
+            const favicons = ['icon01.png', 'icon02.png', 'icon03.png'];
             
             function startFaviconRotation() {
                 setInterval(() => {
@@ -265,6 +432,53 @@
                     favicon.href = favicons[faviconIndex];
                 }, 5000); // 每5秒切换一次
             }
+
+            // GitHub Calendar初始化
+            function initGitHubCalendar() {
+                GitHubCalendar(".calendar", "Syruph-dot", {
+                    responsive: true,
+                    summary_text: '年度贡献统计'
+                });
+            }
+
+            // 自定义滑块功能
+            function initSliders() {
+                const sliders = document.querySelectorAll('.custom-slider');
+                sliders.forEach(slider => {
+                    const input = slider.querySelector('input[type="range"]');
+                    const fill = slider.querySelector('.custom-slider-fill');
+                    const left = slider.querySelector('.custom-slider-left');
+                    const right = slider.querySelector('.custom-slider-right');
+
+                    function updateSlider() {
+                        const min = parseFloat(input.min) || 0;
+                        const max = parseFloat(input.max) || 100;
+                        const val = parseFloat(input.value);
+                        const percent = ((val - min) / (max - min)) * 100;
+                        const handleWidth = 10;
+
+                        const trackWidth = slider.offsetWidth;
+                        const availableWidth = trackWidth - handleWidth;
+                        const fillWidth = (percent / 100) * availableWidth;
+
+                        left.style.left = '0px';
+                        fill.style.left = `${handleWidth}px`;
+                        fill.style.width = `${fillWidth}px`;
+                        right.style.left = `${handleWidth + fillWidth}px`;
+                    }
+
+                    input.addEventListener('input', updateSlider);
+                    updateSlider();
+                });
+            }
+
+            // 页面加载时加载保存的主题
+            window.onload = function() {
+                loadSavedTheme();
+                startFaviconRotation();
+                initGitHubCalendar();
+                initSliders();
+            };
         </script>
 
         <div class="content">
@@ -306,10 +520,36 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 作者Github节 -->
+            <div class="section">
+                <div class="section-title">作者Github</div>
+                <div class="grid-1">
+                    <div style="text-align: center;">
+                        <div class="column-title" style="margin-bottom: 10px;">
+                            <a href="https://github.com/Syruph-dot" target="_blank">https://github.com/Syruph-dot</a>
+                        </div>
+                        <div class="github-calendar" style="width: 100%; max-width: 600px; margin: 0 auto; display: inline-block;">
+                            <div class="calendar" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 示例滑块节 -->
+            <div class="section">
+                <div class="section-title">测试滑块</div>
+                <div class="custom-slider" style="margin: 20px auto;">
+                    <div class="custom-slider-fill"></div>
+                    <div class="custom-slider-left"></div>
+                    <div class="custom-slider-right"></div>
+                    <input type="range" min="0" max="100" value="50">
+                </div>
+            </div>
         </div>
 
         <div class="footer">
-            &copy; 2026 千年民科网络 Soph Dot Net
+            &copy; 2011 千年民科网络 Soph Dot Net
         </div>
     </div>
 </body>
