@@ -125,15 +125,28 @@
 </head>
 <body class="theme-c">
     <div class="page">
-        <div class="header text-left" style="display: flex; align-items: center; justify-content: left; padding: 10px 10px;">
+        <div class="header text-left">
             <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
         </div>
-        <div class="home-links">
-            <a href="#" onclick="setHomepage()">设为主页</a>
-            <a href="https://www.baidu.com" target="_blank">baidu.com</a>
-            <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
-            <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
-            <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
+        <div class="home-links" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <a href="#" onclick="setHomepage()">设为主页</a>
+                <a href="https://www.baidu.com" target="_blank">baidu.com</a>
+                <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
+                <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
+                <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
+            </div>
+            <div>
+                <select id="theme-select" onchange="changeTheme(this.value)">
+                    <option value="theme-c">默认主题</option>
+                    <option value="theme-a">深色主题</option>
+                    <option value="theme-b">蓝色主题</option>
+                    <option value="theme-d">白色主题</option>
+                    <option value="theme-e">黄色主题</option>
+                    <option value="aero">Aero主题</option>
+                    <option value="metro">Metro主题</option>
+                </select>
+            </div>
         </div>
         <div class="banner">
             <div class="slides">
@@ -217,6 +230,27 @@
 
             // 每5秒自动切换
             setInterval(nextSlide, 5000);
+
+            // 主题切换功能
+            function changeTheme(theme) {
+                document.body.className = theme;
+                // 保存主题到本地存储
+                localStorage.setItem('theme', theme);
+            }
+
+            // 加载保存的主题
+            function loadSavedTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    document.body.className = savedTheme;
+                    document.getElementById('theme-select').value = savedTheme;
+                }
+            }
+
+            // 页面加载时加载保存的主题
+            window.onload = function() {
+                loadSavedTheme();
+            };
         </script>
 
         <div class="content">
@@ -225,8 +259,8 @@
                 <div class="section-title">导航</div>
                 <div class="grid-3">
                     <div class="column">
-                        <div class="column-icon">[Image]</div>
-                        <div class="column-title">博客</div>
+                        <div class="column-icon"> <a href="blog.html" target="_blank">[Image]</a></div>
+                        <div class="column-title"> <a href="blog.html" target="_blank">博客</a></div>
                         <div class="column-desc">技术分享与思考</div>
                     </div>
                     <div class="column">
