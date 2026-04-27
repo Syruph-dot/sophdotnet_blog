@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土豆网TV - Soph Dot Net</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
+    <link rel="stylesheet" href="css/mobile-framework.css">
+    <style>
+        body {
+            background: #f5f5f5;
+        }
+        .banner {
+            width: 100%;
+            max-width: 600px;
+            height: 150px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #e0e0e0, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-text {
+            position: relative;
+            z-index: 1;
+            font-size: 24px;
+            color: #666;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+        .home-links {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            text-align: right;
+        }
+        .home-links a {
+            color: #666;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .home-links a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+        .big-card {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            border: 2px solid #dee2e6;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .big-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #4a90e2;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        }
+        .big-card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #4a90e2, #7bb8f5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+        .big-card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .big-card-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="theme-c">
+    <div class="page">
+        <div class="header text-left">
+            <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
+        </div>
+        <div class="home-links">
+            <a href="index.html">返回首页</a>
+        </div>
+        <div class="banner">
+            <div class="banner-text">土豆网TV</div>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <a href="gallery.html" class="big-card">
+                    <div class="big-card-icon">🖼️</div>
+                    <div class="big-card-title">图库</div>
+                    <div class="big-card-desc">在线压缩图片为GIF并显示</div>
+                </a>
+            </div>
+
+            <div class="section">
+                <div class="section-title">更多内容</div>
+                <div class="grid-1">
+                    <div class="column">
+                        <div class="column-icon">[Image]</div>
+                        <div class="column-title">持续更新中</div>
+                        <div class="column-desc">更多功能即将上线</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2011 千年民科网络 Soph Dot Net
+        </div>
+    </div>
+</body>
+</html>

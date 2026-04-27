@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图库 - 即时GIF压缩展示</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
+    <link rel="stylesheet" href="css/mobile-framework.css">
+    <style>
+        body {
+            background: #f5f5f5;
+        }
+        .banner {
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+        }
+        .home-links {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            text-align: right;
+        }
+        .home-links a {
+            color: #666;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .home-links a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+        .gallery-section {
+            margin: 20px 0;
+        }
+        .gallery-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .gallery-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .gallery-image-container {
+            position: relative;
+            height: 150px;
+            background: #f0f0f0;
+        }
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease;
+        }
+        .gallery-image.loading {
+            opacity: 0.5;
+        }
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .gallery-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .gallery-info .file-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .gallery-info .file-size {
+            font-size: 10px;
+            color: #999;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+        .status-badge.compressed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-badge.loading {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .folder-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .folder-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .folder-image-container {
+            position: relative;
+            height: 150px;
+            background: #f0f0f0;
+        }
+        .folder-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .folder-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .folder-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .folder-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .folder-count {
+            font-size: 10px;
+            color: #999;
+        }
+        .subfolder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .subfolder-grid.show {
+            display: grid;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .filter-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 12px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .filter-btn:hover {
+            border-color: #667eea;
+        }
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .image-modal.show {
+            display: flex;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+        }
+        .modal-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-size: 12px;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 30px;
+        }
+    </style>
+</head>
+<body class="theme-c">
+    <div class="page">
+        <div class="header text-left">
+            <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
+        </div>
+        <div class="home-links">
+            <a href="potato_tv.html">返回土豆网TV</a>
+            <a href="index.html">返回首页</a>
+        </div>
+        <div class="banner">
+            图库 - 即时GIF压缩展示
+        </div>
+
+        <div class="content">
+            <div class="filter-section">
+                <div class="filter-title">过滤</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterImages('all')">全部</button>
+                    <button class="filter-btn" onclick="filterImages('compressed')">已压缩</button>
+                    <button class="filter-btn" onclick="filterImages('original')">原始</button>
+                </div>
+            </div>
+
+            <div class="gallery-section">
+                <div class="gallery-title">图片展示</div>
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- 图片将通过JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <div class="folder-section">
+                <div class="gallery-title">文件夹</div>
+                <div class="folder-grid" id="folderGrid">
+                    <!-- 文件夹将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2011 千年民科网络 Soph Dot Net
+        </div>
+    </div>
+
+    <div class="image-modal" id="imageModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <img id="modalImage" class="modal-image" alt="">
+            <div class="modal-info" id="modalInfo"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import gifsicle from 'https://cdn.jsdelivr.net/npm/gifsicle-wasm-browser/dist/gifsicle.min.js';
+
+        let compressedImages = [];
+
+        async function loadGallery() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            const folderGrid = document.getElementById('folderGrid');
+            
+            galleryGrid.innerHTML = '';
+            folderGrid.innerHTML = '';
+
+            try {
+                // 扫描gallery目录
+                const response = await fetch('gallery/');
+                const html = await response.text();
+                
+                // 解析HTML获取文件和文件夹
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                const files = [];
+                const folders = [];
+                
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '../') {
+                        if (href.endsWith('/')) {
+                            // 文件夹
+                            folders.push(href.replace('/', ''));
+                        } else {
+                            // 文件
+                            files.push(href);
+                        }
+                    }
+                });
+
+                // 显示根目录文件
+                for (const file of files) {
+                    const filePath = `gallery/${file}`;
+                    await displayFile(galleryGrid, filePath, file);
+                }
+
+                // 显示文件夹
+                for (const folder of folders) {
+                    await displayFolder(folderGrid, folder);
+                }
+
+            } catch (error) {
+                console.error('加载图库失败:', error);
+                galleryGrid.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">加载失败，请检查服务器是否运行</div>';
+            }
+        }
+
+        async function displayFile(container, filePath, fileName) {
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+            galleryItem.dataset.filename = fileName;
+            galleryItem.innerHTML = `
+                <div class="gallery-image-container">
+                    <img class="gallery-image loading" src="${filePath}" alt="${fileName}">
+                    <div class="loading-spinner"></div>
+                </div>
+                <div class="gallery-info">
+                    <div class="file-name">${fileName}</div>
+                    <div class="file-size">加载中...</div>
+                    <div class="status-badge loading">处理中</div>
+                </div>
+            `;
+            container.appendChild(galleryItem);
+
+            try {
+                const compressedFile = await compressImage(filePath, fileName);
+                updateGalleryItem(galleryItem, compressedFile);
+            } catch (error) {
+                console.error('处理失败:', error);
+                updateGalleryItemError(galleryItem);
+            }
+        }
+
+        async function displayFolder(container, folderName) {
+            const folderPath = `gallery/${folderName}`;
+            
+            try {
+                // 扫描文件夹内容
+                const response = await fetch(folderPath + '/');
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                const files = [];
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '../') {
+                        files.push(href);
+                    }
+                });
+
+                if (files.length === 0) return;
+
+                // 获取第一张图片作为封面
+                let coverImage = null;
+                for (const file of files) {
+                    if (file.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        coverImage = `${folderPath}/${file}`;
+                        break;
+                    }
+                }
+
+                const folderItem = document.createElement('div');
+                folderItem.className = 'folder-item';
+                folderItem.innerHTML = `
+                    <div class="folder-image-container">
+                        ${coverImage ? `<img class="folder-image" src="${coverImage}" alt="${folderName}">` : ''}
+                        <div class="folder-overlay">${folderName}</div>
+                    </div>
+                    <div class="folder-info">
+                        <div class="folder-name">${folderName}</div>
+                        <div class="folder-count">${files.length} 个文件</div>
+                    </div>
+                    <div class="subfolder-grid" id="subfolder-${folderName}">
+                        <!-- 子文件夹内容将通过JavaScript动态生成 -->
+                    </div>
+                `;
+                container.appendChild(folderItem);
+
+                // 点击展开/收起文件夹
+                folderItem.addEventListener('click', () => {
+                    const subfolderGrid = folderItem.querySelector('.subfolder-grid');
+                    if (subfolderGrid.classList.contains('show')) {
+                        subfolderGrid.classList.remove('show');
+                    } else {
+                        subfolderGrid.classList.add('show');
+                        // 加载子文件夹内容
+                        loadSubfolderContent(subfolderGrid, folderPath, files);
+                    }
+                });
+
+            } catch (error) {
+                console.error('加载文件夹失败:', error);
+            }
+        }
+
+        async function loadSubfolderContent(container, folderPath, files) {
+            if (container.querySelector('.gallery-item')) return; // 已加载过
+
+            for (const file of files) {
+                const filePath = `${folderPath}/${file}`;
+                await displayFile(container, filePath, file);
+            }
+        }
+
+        async function compressImage(imagePath, fileName, index = 0) {
+            const response = await fetch(imagePath);
+            const blob = await response.blob();
+            
+            try {
+                const inputFiles = [{
+                    file: blob,
+                    name: `img${index}.gif`
+                }];
+
+                const outGifFiles = await gifsicle.run({
+                    input: inputFiles,
+                    command: [
+                        `-e -U --lossy=30 --resize 320x_ img${index}.gif -o /out/out.gif`
+                    ]
+                });
+
+                return outGifFiles[0];
+            } catch (error) {
+                console.error('压缩失败:', error);
+                // 如果压缩失败，返回原始图片
+                return blob;
+            }
+        }
+
+        function updateGalleryItem(galleryItem, compressedFile) {
+            const imgElement = galleryItem.querySelector('.gallery-image');
+            const sizeElement = galleryItem.querySelector('.file-size');
+            const statusBadge = galleryItem.querySelector('.status-badge');
+            const loadingSpinner = galleryItem.querySelector('.loading-spinner');
+
+            try {
+                let compressedUrl;
+                if (compressedFile instanceof Blob) {
+                    compressedUrl = URL.createObjectURL(compressedFile);
+                } else if (compressedFile instanceof File) {
+                    compressedUrl = URL.createObjectURL(compressedFile);
+                } else {
+                    throw new Error('Invalid file type');
+                }
+                
+                imgElement.src = compressedUrl;
+                imgElement.classList.remove('loading');
+                imgElement.onclick = () => {
+                    if (compressedFile.size) {
+                        openModal(compressedUrl, compressedFile.name || 'image.gif', compressedFile.size);
+                    } else {
+                        openModal(compressedUrl, 'image.gif', 0);
+                    }
+                };
+                
+                loadingSpinner.style.display = 'none';
+                sizeElement.textContent = formatSize(compressedFile.size || 0);
+                statusBadge.className = 'status-badge compressed';
+                statusBadge.textContent = '已压缩';
+            } catch (error) {
+                console.error('更新失败:', error);
+                updateGalleryItemError(galleryItem);
+            }
+        }
+
+        function updateGalleryItemError(galleryItem) {
+            const imgElement = galleryItem.querySelector('.gallery-image');
+            const sizeElement = galleryItem.querySelector('.file-size');
+            const statusBadge = galleryItem.querySelector('.status-badge');
+            const loadingSpinner = galleryItem.querySelector('.loading-spinner');
+
+            imgElement.classList.remove('loading');
+            imgElement.style.transform = 'scale(0.4)';
+            imgElement.style.transformOrigin = 'center';
+            imgElement.style.transition = 'transform 0.3s ease';
+            loadingSpinner.style.display = 'none';
+            sizeElement.textContent = '非GIF格式';
+            statusBadge.className = 'status-badge';
+            statusBadge.textContent = '原始';
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function openModal(imageUrl, fileName, fileSize) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalInfo = document.getElementById('modalInfo');
+
+            modalImage.src = imageUrl;
+            modalInfo.innerHTML = `
+                <div>${fileName}</div>
+                <div>大小: ${formatSize(fileSize)}</div>
+                <div>格式: GIF (压缩后)</div>
+            `;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        function filterImages(filter) {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            galleryItems.forEach(item => {
+                if (filter === 'all' || 
+                    (filter === 'compressed' && item.querySelector('.status-badge.compressed')) ||
+                    (filter === 'original' && !item.querySelector('.status-badge.compressed'))) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 页面加载时自动加载图库
+        window.onload = function() {
+            loadGallery();
+        };
+
+        // 点击模态框外部关闭
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
