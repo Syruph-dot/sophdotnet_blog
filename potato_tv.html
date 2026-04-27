@@ -13,12 +13,12 @@
         .banner {
             width: 100%;
             max-width: 600px;
-            height: 150px;
+            height: 30px;
             margin: 0 auto;
             background: linear-gradient(135deg, #e0e0e0, #f0f0f0);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: left;
             color: #999;
             font-size: 14px;
             border-bottom: 1px solid #ddd;
@@ -30,7 +30,7 @@
             z-index: 1;
             font-size: 24px;
             color: #666;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            font-family: "FangSong", "仿宋", "STFangsong", serif;
         }
         .home-links {
             padding: 8px 15px;
@@ -54,19 +54,16 @@
             max-width: 400px;
             margin: 30px auto;
             padding: 40px 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            background: linear-gradient(180deg, #f8f9fa, #b9bcbf);
             border-radius: 16px;
             border: 2px solid #dee2e6;
-            text-align: center;
+            text-align: left;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .big-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            border-color: #4a90e2;
-            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        .big-card:active {
+            filter: brightness(0.85);
         }
         .big-card-icon {
             width: 80px;
@@ -119,9 +116,8 @@
         <div class="content">
             <div class="section">
                 <a href="gallery.html" class="big-card">
-                    <div class="big-card-icon">🖼️</div>
                     <div class="big-card-title">图库</div>
-                    <div class="big-card-desc">在线压缩图片为GIF并显示</div>
+                    <div class="big-card-desc">东方Project、蔚蓝档案、以及杂项</div>
                 </a>
             </div>
 

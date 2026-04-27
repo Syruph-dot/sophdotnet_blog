@@ -10,20 +10,6 @@
         body {
             background: #f5f5f5;
         }
-        .banner {
-            width: 100%;
-            max-width: 600px;
-            height: 100px;
-            margin: 0 auto;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: 600;
-            border-bottom: 1px solid #ddd;
-        }
         .home-links {
             padding: 8px 15px;
             background: #f8f9fa;
@@ -47,6 +33,7 @@
             font-size: 16px;
             font-weight: 600;
             color: #333;
+            font-family: "FangSong", "仿宋", "STFangsong", serif;
             margin-bottom: 15px;
             padding-bottom: 8px;
             border-bottom: 1px solid #eee;
@@ -193,42 +180,6 @@
         .subfolder-grid.show {
             display: grid;
         }
-        .filter-section {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .filter-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .filter-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .filter-btn {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 16px;
-            font-size: 12px;
-            background: white;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: #667eea;
-        }
-        .filter-btn:hover {
-            border-color: #667eea;
-        }
         .image-modal {
             position: fixed;
             top: 0;
@@ -288,32 +239,52 @@
             margin-bottom: 15px;
         }
         .column-selector {
-            display: flex;
-            gap: 6px;
+            position: relative;
         }
-        .column-btn {
-            width: 32px;
-            height: 32px;
+        .column-dropdown {
+            padding: 6px 12px;
             border: 1px solid #ddd;
             border-radius: 6px;
             background: white;
             color: #666;
             font-size: 13px;
-            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-width: 80px;
         }
-        .column-btn:hover {
+        .column-dropdown:hover {
             border-color: #667eea;
+        }
+        .column-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 100;
+            min-width: 80px;
+        }
+        .column-dropdown-menu.show {
+            display: block;
+        }
+        .column-option {
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .column-option:hover {
+            background: #f5f5f5;
             color: #667eea;
         }
-        .column-btn.active {
+        .column-option.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: #667eea;
         }
         .gallery-grid {
             display: flex;
@@ -397,27 +368,18 @@
             <a href="potato_tv.html">返回土豆网TV</a>
             <a href="index.html">返回首页</a>
         </div>
-        <div class="banner">
-            图库 - 即时GIF压缩展示
-        </div>
 
         <div class="content">
-            <div class="filter-section">
-                <div class="filter-title">过滤</div>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterImages('all')">全部</button>
-                    <button class="filter-btn" onclick="filterImages('compressed')">已压缩</button>
-                    <button class="filter-btn" onclick="filterImages('original')">原始</button>
-                </div>
-            </div>
-
             <div class="gallery-section">
                 <div class="gallery-header">
                     <div class="gallery-title">图片展示</div>
                     <div class="column-selector">
-                        <button class="column-btn" data-cols="2" onclick="setColumns(2)">2</button>
-                        <button class="column-btn active" data-cols="3" onclick="setColumns(3)">3</button>
-                        <button class="column-btn" data-cols="4" onclick="setColumns(4)">4</button>
+                        <button class="column-dropdown" id="columnDropdown" onclick="toggleColumnDropdown()">3列 ▼</button> 
+                        <div class="column-dropdown-menu" id="columnDropdownMenu">
+                            <div class="column-option" data-cols="2" onclick="setColumns(2)">2列</div>
+                            <div class="column-option active" data-cols="3" onclick="setColumns(3)">3列</div>
+                            <div class="column-option" data-cols="4" onclick="setColumns(4)">4列</div>
+                        </div>
                     </div>
                 </div>
                 <div class="gallery-grid cols-3" id="galleryGrid">
@@ -452,6 +414,11 @@
         let compressedImages = [];
         let currentColumns = 3;
 
+        function toggleColumnDropdown() {
+            const menu = document.getElementById('columnDropdownMenu');
+            menu.classList.toggle('show');
+        }
+
         function setColumns(cols) {
             currentColumns = cols;
             const mainGrid = document.getElementById('galleryGrid');
@@ -462,12 +429,19 @@
             // 重置列索引
             columnIndices.set(mainGrid, 0);
 
-            document.querySelectorAll('.column-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (parseInt(btn.dataset.cols) === cols) {
-                    btn.classList.add('active');
+            // 更新下拉按钮文本
+            document.getElementById('columnDropdown').textContent = cols + '列 ▼';
+            
+            // 更新下拉选项样式
+            document.querySelectorAll('.column-option').forEach(option => {
+                option.classList.remove('active');
+                if (parseInt(option.dataset.cols) === cols) {
+                    option.classList.add('active');
                 }
             });
+            
+            // 关闭下拉菜单
+            document.getElementById('columnDropdownMenu').classList.remove('show');
 
             localStorage.setItem('galleryColumns', cols);
             loadGallery();
@@ -482,7 +456,7 @@
 
             try {
                 // 扫描gallery目录
-                const response = await fetch('gallery/');
+                const response = await fetch('images/gallery/');
                 const html = await response.text();
                 
                 // 解析HTML获取文件和文件夹
@@ -514,7 +488,7 @@
 
                 // 显示根目录文件
                 for (const file of files) {
-                    const filePath = `gallery/${encodeURIComponent(file)}`;
+                    const filePath = `images/gallery/${encodeURIComponent(file)}`;
                     await displayFile(galleryGrid, filePath, file);
                 }
 
@@ -580,7 +554,7 @@
         }
 
         async function displayFolder(container, folderName) {
-            const folderPath = `gallery/${encodeURIComponent(folderName)}`;
+            const folderPath = `images/gallery/${encodeURIComponent(folderName)}`;
             
             try {
                 // 扫描文件夹内容
@@ -769,23 +743,6 @@
             document.getElementById('imageModal').classList.remove('show');
         }
 
-        function filterImages(filter) {
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            filterBtns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            const galleryItems = document.querySelectorAll('.gallery-item');
-            galleryItems.forEach(item => {
-                if (filter === 'all' || 
-                    (filter === 'compressed' && item.querySelector('.status-badge.compressed')) ||
-                    (filter === 'original' && !item.querySelector('.status-badge.compressed'))) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
         // 页面加载时自动加载图库
         window.onload = function() {
             const savedCols = localStorage.getItem('galleryColumns');
@@ -793,10 +750,13 @@
             
             if (savedCols) {
                 currentColumns = parseInt(savedCols);
-                document.querySelectorAll('.column-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (parseInt(btn.dataset.cols) === currentColumns) {
-                        btn.classList.add('active');
+                // 更新下拉按钮文本
+                document.getElementById('columnDropdown').textContent = currentColumns + '列 ▼';
+                // 更新下拉选项样式
+                document.querySelectorAll('.column-option').forEach(option => {
+                    option.classList.remove('active');
+                    if (parseInt(option.dataset.cols) === currentColumns) {
+                        option.classList.add('active');
                     }
                 });
                 mainGrid.className = mainGrid.className.replace(/cols-\d+/g, '');
@@ -811,6 +771,14 @@
             
             loadGallery();
         };
+
+        // 点击页面其他地方关闭下拉菜单
+        document.addEventListener('click', function(e) {
+            const selector = document.querySelector('.column-selector');
+            if (!selector.contains(e.target)) {
+                document.getElementById('columnDropdownMenu').classList.remove('show');
+            }
+        });
 
         // 点击模态框外部关闭
         document.getElementById('imageModal').addEventListener('click', function(e) {
