@@ -124,27 +124,33 @@
             grid-template-columns: 1fr;
             gap: 10px;
         }
-        .github-calendar {
-            margin-top: 10px;
-            max-width: 100%;
-            overflow-x: auto;
-        }
-        .github-calendar .calendar {
+        .github-calendar-container {
             width: 100%;
             max-width: 600px;
-            min-width: 300px;
-            position: relative;
+            margin: 0 auto;
             overflow: hidden;
+            position: relative;
             border-radius: 12px;
-            padding: 15px;
-            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1), rgba(72, 209, 204, 0.15), rgba(175, 238, 238, 0.1));
             box-shadow: 
                 0 4px 15px rgba(64, 224, 208, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.4),
                 inset 0 -1px 0 rgba(0, 139, 139, 0.2);
             border: 1px solid rgba(64, 224, 208, 0.3);
         }
-        .github-calendar .calendar::before {
+        .github-calendar {
+            margin-top: 0;
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1), rgba(72, 209, 204, 0.15), rgba(175, 238, 238, 0.1));
+        }
+        .github-calendar .calendar {
+            width: 100%;
+            min-width: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        .github-calendar-container::before {
             content: '';
             position: absolute;
             top: 10px;
@@ -155,8 +161,9 @@
             border-radius: 50%;
             animation: bubbleFloat 4s ease-in-out infinite;
             pointer-events: none;
+            z-index: 1;
         }
-        .github-calendar .calendar::after {
+        .github-calendar-container::after {
             content: '';
             position: absolute;
             bottom: 15%;
@@ -167,6 +174,7 @@
             border-radius: 50%;
             animation: bubbleFloat 5s ease-in-out infinite reverse;
             pointer-events: none;
+            z-index: 1;
         }
         .github-calendar .calendar .width-full {
             max-width: 100% !important;
@@ -522,15 +530,18 @@
             </div>
 
             <!-- 作者Github节 -->
+            <!--不要使用div class=grid-1了。有gap，不居中且超出！ -->
             <div class="section">
                 <div class="section-title">作者Github</div>
-                <div class="grid-1">
+                <div>
                     <div style="text-align: center;">
                         <div class="column-title" style="margin-bottom: 10px;">
                             <a href="https://github.com/Syruph-dot" target="_blank">https://github.com/Syruph-dot</a>
                         </div>
-                        <div class="github-calendar" style="width: 90%; max-width: 600px; margin: 0 auto; display: inline-block;">
-                            <div class="calendar" style="width: 90%;"></div>
+                        <div class="github-calendar-container">
+                            <div class="github-calendar">
+                                <div class="calendar"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

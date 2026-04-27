@@ -69,13 +69,13 @@
         }
         .gallery-image-container {
             position: relative;
-            height: 150px;
+            height: auto;
             background: #f0f0f0;
         }
         .gallery-image {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            object-fit: contain;
             transition: opacity 0.3s ease;
         }
         .gallery-image.loading {
@@ -252,6 +252,7 @@
         .modal-image {
             max-width: 100%;
             max-height: 80vh;
+            object-fit: contain;
             border-radius: 8px;
         }
         .modal-info {
@@ -280,6 +281,111 @@
             font-size: 16px;
             line-height: 30px;
         }
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .column-selector {
+            display: flex;
+            gap: 6px;
+        }
+        .column-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .column-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .column-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .gallery-grid {
+            display: flex;
+            gap: 10px;
+        }
+        .gallery-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .gallery-grid .gallery-item {
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            transition: none;
+        }
+        .gallery-grid .gallery-item:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .gallery-grid .gallery-image-container {
+            position: relative;
+            background: transparent;
+        }
+        .gallery-grid .gallery-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            transition: opacity 0.3s ease;
+        }
+        .subfolder-grid {
+            display: flex;
+            gap: 10px;
+        }
+        .subfolder-grid .gallery-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .subfolder-grid .gallery-image-container {
+            height: auto;
+        }
+        .subfolder-grid .gallery-image {
+            object-fit: contain;
+        }
+        @media (max-width: 600px) {
+            .gallery-grid.cols-4,
+            .gallery-grid.cols-3 {
+                flex-direction: column;
+            }
+            .gallery-grid.cols-4 .gallery-column,
+            .gallery-grid.cols-3 .gallery-column {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .gallery-grid.cols-4 .gallery-item,
+            .gallery-grid.cols-3 .gallery-item {
+                flex: 1 1 calc(50% - 10px);
+            }
+            .subfolder-grid {
+                flex-direction: column;
+            }
+            .subfolder-grid .gallery-column {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .subfolder-grid .gallery-item {
+                flex: 1 1 calc(50% - 10px);
+            }
+        }
     </style>
 </head>
 <body class="theme-c">
@@ -306,8 +412,15 @@
             </div>
 
             <div class="gallery-section">
-                <div class="gallery-title">图片展示</div>
-                <div class="gallery-grid" id="galleryGrid">
+                <div class="gallery-header">
+                    <div class="gallery-title">图片展示</div>
+                    <div class="column-selector">
+                        <button class="column-btn" data-cols="2" onclick="setColumns(2)">2</button>
+                        <button class="column-btn active" data-cols="3" onclick="setColumns(3)">3</button>
+                        <button class="column-btn" data-cols="4" onclick="setColumns(4)">4</button>
+                    </div>
+                </div>
+                <div class="gallery-grid cols-3" id="galleryGrid">
                     <!-- 图片将通过JavaScript动态生成 -->
                 </div>
             </div>
@@ -337,6 +450,28 @@
         import gifsicle from 'https://cdn.jsdelivr.net/npm/gifsicle-wasm-browser/dist/gifsicle.min.js';
 
         let compressedImages = [];
+        let currentColumns = 3;
+
+        function setColumns(cols) {
+            currentColumns = cols;
+            const mainGrid = document.getElementById('galleryGrid');
+            mainGrid.className = mainGrid.className.replace(/cols-\d+/g, '');
+            mainGrid.classList.add(`cols-${cols}`);
+            createColumns(mainGrid, cols);
+            
+            // 重置列索引
+            columnIndices.set(mainGrid, 0);
+
+            document.querySelectorAll('.column-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.cols) === cols) {
+                    btn.classList.add('active');
+                }
+            });
+
+            localStorage.setItem('galleryColumns', cols);
+            loadGallery();
+        }
 
         async function loadGallery() {
             const galleryGrid = document.getElementById('galleryGrid');
@@ -359,8 +494,14 @@
                 const folders = [];
                 
                 links.forEach(link => {
-                    const href = link.getAttribute('href');
+                    let href = link.getAttribute('href');
                     if (href && href !== '../') {
+                        // 解码URL编码的中文字符
+                        try {
+                            href = decodeURIComponent(href);
+                        } catch (e) {
+                            // 如果解码失败，使用原始值
+                        }
                         if (href.endsWith('/')) {
                             // 文件夹
                             folders.push(href.replace('/', ''));
@@ -373,7 +514,7 @@
 
                 // 显示根目录文件
                 for (const file of files) {
-                    const filePath = `gallery/${file}`;
+                    const filePath = `gallery/${encodeURIComponent(file)}`;
                     await displayFile(galleryGrid, filePath, file);
                 }
 
@@ -388,34 +529,58 @@
             }
         }
 
-        async function displayFile(container, filePath, fileName) {
-            const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
-            galleryItem.dataset.filename = fileName;
-            galleryItem.innerHTML = `
-                <div class="gallery-image-container">
-                    <img class="gallery-image loading" src="${filePath}" alt="${fileName}">
-                    <div class="loading-spinner"></div>
-                </div>
-                <div class="gallery-info">
-                    <div class="file-name">${fileName}</div>
-                    <div class="file-size">加载中...</div>
-                    <div class="status-badge loading">处理中</div>
-                </div>
-            `;
-            container.appendChild(galleryItem);
-
-            try {
-                const compressedFile = await compressImage(filePath, fileName);
-                updateGalleryItem(galleryItem, compressedFile);
-            } catch (error) {
-                console.error('处理失败:', error);
-                updateGalleryItemError(galleryItem);
+        function createColumns(container, cols) {
+            container.innerHTML = '';
+            for (let i = 0; i < cols; i++) {
+                const column = document.createElement('div');
+                column.className = 'gallery-column';
+                container.appendChild(column);
             }
         }
 
+        // 用于跟踪每列当前分配到的图片索引
+        const columnIndices = new Map();
+
+        async function displayFile(container, filePath, fileName) {
+            const columns = container.querySelectorAll('.gallery-column');
+            if (columns.length === 0) {
+                let cols = 3;
+                if (container.classList.contains('cols-2')) {
+                    cols = 2;
+                } else if (container.classList.contains('cols-3')) {
+                    cols = 3;
+                } else if (container.classList.contains('cols-4')) {
+                    cols = 4;
+                }
+                createColumns(container, cols);
+                // 初始化该容器的列索引
+                columnIndices.set(container, 0);
+            }
+            
+            const columnsArray = Array.from(container.querySelectorAll('.gallery-column'));
+            if (columnsArray.length === 0) return;
+            
+            // 按顺序分配：第一列入队，第二列入队，第三列入队，然后循环
+            let currentIndex = columnIndices.get(container) || 0;
+            const targetColumn = columnsArray[currentIndex % columnsArray.length];
+            columnIndices.set(container, currentIndex + 1);
+            
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+            galleryItem.innerHTML = `
+                <div class="gallery-image-container">
+                    <img class="gallery-image" src="${filePath}" alt="${fileName}" loading="lazy">
+                </div>
+            `;
+            targetColumn.appendChild(galleryItem);
+
+            galleryItem.querySelector('img').addEventListener('click', () => {
+                openModal(filePath, fileName);
+            });
+        }
+
         async function displayFolder(container, folderName) {
-            const folderPath = `gallery/${folderName}`;
+            const folderPath = `gallery/${encodeURIComponent(folderName)}`;
             
             try {
                 // 扫描文件夹内容
@@ -428,8 +593,14 @@
                 
                 const files = [];
                 links.forEach(link => {
-                    const href = link.getAttribute('href');
+                    let href = link.getAttribute('href');
                     if (href && href !== '../') {
+                        // 解码URL编码的中文字符
+                        try {
+                            href = decodeURIComponent(href);
+                        } catch (e) {
+                            // 如果解码失败，使用原始值
+                        }
                         files.push(href);
                     }
                 });
@@ -440,7 +611,7 @@
                 let coverImage = null;
                 for (const file of files) {
                     if (file.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        coverImage = `${folderPath}/${file}`;
+                        coverImage = `${folderPath}/${encodeURIComponent(file)}`;
                         break;
                     }
                 }
@@ -456,7 +627,7 @@
                         <div class="folder-name">${folderName}</div>
                         <div class="folder-count">${files.length} 个文件</div>
                     </div>
-                    <div class="subfolder-grid" id="subfolder-${folderName}">
+                    <div class="subfolder-grid cols-${currentColumns}" id="subfolder-${folderName}">
                         <!-- 子文件夹内容将通过JavaScript动态生成 -->
                     </div>
                 `;
@@ -482,8 +653,21 @@
         async function loadSubfolderContent(container, folderPath, files) {
             if (container.querySelector('.gallery-item')) return; // 已加载过
 
+            let cols = 3;
+            if (container.classList.contains('cols-2')) {
+                cols = 2;
+            } else if (container.classList.contains('cols-3')) {
+                cols = 3;
+            } else if (container.classList.contains('cols-4')) {
+                cols = 4;
+            }
+            createColumns(container, cols);
+            
+            // 重置该容器的列索引
+            columnIndices.set(container, 0);
+
             for (const file of files) {
-                const filePath = `${folderPath}/${file}`;
+                const filePath = `${folderPath}/${encodeURIComponent(file)}`;
                 await displayFile(container, filePath, file);
             }
         }
@@ -520,14 +704,10 @@
             const loadingSpinner = galleryItem.querySelector('.loading-spinner');
 
             try {
-                let compressedUrl;
-                if (compressedFile instanceof Blob) {
-                    compressedUrl = URL.createObjectURL(compressedFile);
-                } else if (compressedFile instanceof File) {
-                    compressedUrl = URL.createObjectURL(compressedFile);
-                } else {
+                if (!(compressedFile instanceof Blob)) {
                     throw new Error('Invalid file type');
                 }
+                const compressedUrl = URL.createObjectURL(compressedFile);
                 
                 imgElement.src = compressedUrl;
                 imgElement.classList.remove('loading');
@@ -608,6 +788,27 @@
 
         // 页面加载时自动加载图库
         window.onload = function() {
+            const savedCols = localStorage.getItem('galleryColumns');
+            const mainGrid = document.getElementById('galleryGrid');
+            
+            if (savedCols) {
+                currentColumns = parseInt(savedCols);
+                document.querySelectorAll('.column-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.cols) === currentColumns) {
+                        btn.classList.add('active');
+                    }
+                });
+                mainGrid.className = mainGrid.className.replace(/cols-\d+/g, '');
+                mainGrid.classList.add(`cols-${currentColumns}`);
+            }
+            
+            // 先创建列结构
+            createColumns(mainGrid, currentColumns);
+            
+            // 重置列索引
+            columnIndices.set(mainGrid, 0);
+            
             loadGallery();
         };
 
