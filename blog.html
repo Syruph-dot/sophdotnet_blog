@@ -3,167 +3,857 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>博客 - 千年民科网络</title>
-    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
-    <link rel="stylesheet" href="css/mobile-framework.css?v=20260518-scrollbar-hide">
+    <title>博客 - Soph Dot Net</title>
+    <link rel="icon" id="favicon" href="icon01.gif" type="image/gif">
+    <link rel="stylesheet" href="css/mobile-framework.css?v=20260518-blog">
     <script src="js/shared-header.js?v=20260518-shared-header" defer></script>
     <style>
-        .blog-post {
-            margin-bottom: 15px;
+        :root {
+            --blog-bg: #f4f6f8;
+            --blog-panel: #ffffff;
+            --blog-panel-2: #f7f9fb;
+            --blog-border: #d9e0e7;
+            --blog-text: #1f2933;
+            --blog-muted: #66788a;
+            --blog-accent: #3b82b8;
+            --blog-accent-soft: rgba(59, 130, 184, 0.12);
+            --blog-code-bg: #17202a;
+            --blog-code-text: #ecf2f8;
+            --blog-shadow: 0 10px 30px rgba(31, 41, 51, 0.08);
         }
-        .blog-post-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: inherit;
-            margin-bottom: 8px;
+
+        body {
+            background: var(--blog-bg);
         }
-        .blog-post-title a {
-            color: inherit;
-            text-decoration: none;
+
+        .page.blog-page {
+            max-width: 1200px;
+            background: transparent;
         }
-        .blog-post-title a:hover {
-            color: #4a90e2;
+
+        .blog-shell {
+            position: relative;
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr) 280px;
+            gap: 16px;
+            padding: 16px;
         }
-        .blog-post-meta {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 10px;
+
+        .blog-panel {
+            min-width: 0;
+            background: var(--blog-panel);
+            border: 1px solid var(--blog-border);
+            border-radius: 8px;
+            box-shadow: var(--blog-shadow);
         }
-        .blog-post-excerpt {
-            font-size: 14px;
-            color: inherit;
+
+        .blog-tree-panel,
+        .blog-side-panel {
+            align-self: start;
+            max-height: calc(100vh - 150px);
+            overflow: auto;
+        }
+
+        .blog-tree-panel {
+            background: #202733;
+            color: #dce6f0;
+            border-color: #303b4a;
+            box-shadow: none;
+        }
+
+        .blog-tree-header,
+        .blog-side-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--blog-border);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .blog-tree-header {
+            border-bottom-color: #303b4a;
+            color: #f4f8fc;
+        }
+
+        .blog-tree {
+            padding: 8px 6px 12px;
+            font-size: 13px;
             line-height: 1.4;
-            margin-bottom: 10px;
         }
-        .blog-post-readmore {
+
+        .tree-node {
+            display: block;
+        }
+
+        .tree-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            min-height: 30px;
+            padding: 5px 8px;
+            border: 0;
+            border-radius: 6px;
+            color: inherit;
+            background: transparent;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .tree-row:hover,
+        .tree-row:focus-visible {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tree-row.active {
+            background: #34506c;
+            color: #ffffff;
+        }
+
+        .tree-toggle,
+        .tree-icon {
+            flex: 0 0 auto;
+            width: 16px;
+            text-align: center;
+            color: #9fb1c3;
+        }
+
+        .tree-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tree-children {
+            display: none;
+            padding-left: 14px;
+        }
+
+        .tree-node.expanded > .tree-children {
+            display: block;
+        }
+
+        .blog-reader-panel {
+            overflow: hidden;
+        }
+
+        .reader-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--blog-border);
+            background: var(--blog-panel-2);
+        }
+
+        .reader-title-wrap {
+            min-width: 0;
+        }
+
+        .reader-title {
+            margin: 0 0 4px;
+            color: var(--blog-text);
+            font-size: 20px;
+            line-height: 1.25;
+            letter-spacing: 0;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            color: var(--blog-muted);
             font-size: 12px;
         }
-        .blog-post-readmore a {
-            color: #4a90e2;
+
+        .breadcrumbs span:not(:last-child)::after {
+            content: "/";
+            margin-left: 5px;
+            color: #9aa8b6;
+        }
+
+        .mobile-tree-button,
+        .icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--blog-border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--blog-text);
+            cursor: pointer;
+        }
+
+        .mobile-tree-button {
+            display: none;
+        }
+
+        .icon-button:hover,
+        .mobile-tree-button:hover {
+            border-color: var(--blog-accent);
+            color: var(--blog-accent);
+        }
+
+        .reader-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 360px;
+            padding: 28px;
+            color: var(--blog-muted);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            margin: 0 auto 12px;
+            border: 3px solid #d7e0e8;
+            border-top-color: var(--blog-accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .markdown-body {
+            padding: 24px 30px 34px;
+            color: var(--blog-text);
+            font-size: 16px;
+            line-height: 1.75;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            margin: 1.45em 0 0.65em;
+            line-height: 1.25;
+            letter-spacing: 0;
+        }
+
+        .markdown-body h1:first-child,
+        .markdown-body h2:first-child,
+        .markdown-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .markdown-body p,
+        .markdown-body ul,
+        .markdown-body ol,
+        .markdown-body blockquote,
+        .markdown-body table,
+        .markdown-body pre {
+            margin: 0 0 1em;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 1.5em;
+        }
+
+        .markdown-body blockquote {
+            padding: 10px 14px;
+            border-left: 4px solid var(--blog-accent);
+            background: var(--blog-accent-soft);
+            color: #415466;
+        }
+
+        .markdown-body table {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            border-collapse: collapse;
+        }
+
+        .markdown-body th,
+        .markdown-body td {
+            padding: 8px 10px;
+            border: 1px solid var(--blog-border);
+        }
+
+        .markdown-body th {
+            background: var(--blog-panel-2);
+        }
+
+        .markdown-body code {
+            padding: 0.15em 0.35em;
+            border-radius: 4px;
+            background: #e8eef4;
+            color: #20364a;
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: 0.92em;
+        }
+
+        .markdown-body pre {
+            overflow: auto;
+            padding: 14px 16px;
+            border-radius: 8px;
+            background: var(--blog-code-bg);
+            color: var(--blog-code-text);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: transparent;
+            color: inherit;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        .markdown-body a {
+            color: var(--blog-accent);
+        }
+
+        .hljs-keyword,
+        .hljs-selector-tag,
+        .hljs-title.function_ {
+            color: #93c5fd;
+        }
+
+        .hljs-string,
+        .hljs-attr {
+            color: #a7f3d0;
+        }
+
+        .hljs-comment {
+            color: #94a3b8;
+        }
+
+        .blog-side-section + .blog-side-section {
+            border-top: 1px solid var(--blog-border);
+        }
+
+        .recommendation-list {
+            display: grid;
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .recommendation-item {
+            display: block;
+            padding: 10px 12px;
+            border: 1px solid #e2e8ef;
+            border-radius: 6px;
+            color: var(--blog-text);
+            background: #fff;
             text-decoration: none;
+            cursor: pointer;
         }
-        .blog-post-readmore a:hover {
-            text-decoration: underline;
+
+        .recommendation-item:hover,
+        .recommendation-item:focus-visible {
+            outline: none;
+            border-color: var(--blog-accent);
+            background: var(--blog-accent-soft);
         }
-        
-        /* 主题适配 */
-        .theme-a .blog-post-meta {
-            color: #aaa;
+
+        .recommendation-title {
+            display: -webkit-box;
+            overflow: hidden;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .recommendation-path {
+            margin-top: 5px;
+            overflow: hidden;
+            color: var(--blog-muted);
+            font-size: 11px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-side {
+            min-height: 74px;
+            padding: 14px;
+            color: var(--blog-muted);
+            font-size: 13px;
+        }
+
+        .tree-backdrop {
+            display: none;
+        }
+
+        .blog-error {
+            color: #b42318;
+        }
+
+        .theme-a {
+            --blog-bg: #161b22;
+            --blog-panel: #1f2732;
+            --blog-panel-2: #252f3b;
+            --blog-border: #344151;
+            --blog-text: #edf2f7;
+            --blog-muted: #a8b3c2;
+            --blog-accent: #7bb8f5;
+            --blog-accent-soft: rgba(123, 184, 245, 0.16);
+            --blog-shadow: none;
+        }
+
+        .theme-a .markdown-body blockquote {
+            color: #c7d2df;
+        }
+
+        .theme-a .markdown-body code {
+            background: #303b4a;
+            color: #f4f8fc;
+        }
+
+        .theme-a .recommendation-item,
+        .theme-a .mobile-tree-button,
+        .theme-a .icon-button {
+            background: #252f3b;
+            color: #edf2f7;
+            border-color: #3a4656;
+        }
+
+        .aero {
+            --blog-bg: #edf7fb;
+            --blog-accent: #258177;
+            --blog-accent-soft: rgba(37, 129, 119, 0.12);
+        }
+
+        .metro {
+            --blog-accent: #00897b;
+            --blog-accent-soft: rgba(0, 137, 123, 0.12);
+            --blog-shadow: none;
+        }
+
+        .blog-footer {
+            margin: 0 16px 16px;
+        }
+
+        @media (max-width: 980px) {
+            .blog-shell {
+                grid-template-columns: 230px minmax(0, 1fr);
+            }
+
+            .blog-side-panel {
+                grid-column: 1 / -1;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .blog-shell {
+                display: block;
+                padding: 12px;
+            }
+
+            .blog-reader-panel,
+            .blog-side-panel {
+                margin-bottom: 12px;
+            }
+
+            .mobile-tree-button {
+                display: inline-flex;
+            }
+
+            .blog-tree-panel {
+                position: fixed;
+                z-index: 1001;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: min(86vw, 320px);
+                max-height: none;
+                border-radius: 0;
+                transform: translateX(-104%);
+                transition: transform 0.2s ease;
+            }
+
+            .tree-backdrop {
+                position: fixed;
+                z-index: 1000;
+                inset: 0;
+                background: rgba(8, 15, 23, 0.45);
+            }
+
+            body.tree-open {
+                overflow: hidden;
+            }
+
+            body.tree-open .blog-tree-panel {
+                transform: translateX(0);
+            }
+
+            body.tree-open .tree-backdrop {
+                display: block;
+            }
+
+            .reader-topbar {
+                align-items: flex-start;
+            }
+
+            .reader-title {
+                font-size: 18px;
+            }
+
+            .markdown-body {
+                padding: 18px 16px 26px;
+                font-size: 15px;
+            }
+
+            .blog-side-panel {
+                max-height: none;
+            }
         }
     </style>
 </head>
 <body class="theme-c">
-    <div class="page">
+    <div class="page blog-page">
         <div id="topbar-placeholder"></div>
 
-        <div class="content">
-            <!-- 博客文章列表 -->
-            <div class="section">
-                <div class="section-title">最新博客</div>
-                
-                <!-- 博客文章 1 -->
-                <div class="blog-post ui-block-a">
-                    <div class="blog-post-title">
-                        <a href="#">欢迎来到千年民科网络博客</a>
-                    </div>
-                    <div class="blog-post-meta">
-                        发布于: 2026-04-26 | 分类: 网站公告 | 阅读: 123
-                    </div>
-                    <div class="blog-post-excerpt">
-                        千年民科网络博客正式上线！这里将分享技术心得、生活感悟和各种有趣的内容。欢迎大家关注和支持！
-                    </div>
-                    <div class="blog-post-readmore">
-                        <a href="#">阅读全文 →</a>
+        <main class="blog-shell">
+            <aside class="blog-panel blog-tree-panel" aria-label="博客文件树">
+                <div class="blog-tree-header">
+                    <span>openblog</span>
+                    <button class="icon-button" id="close-tree" type="button" aria-label="关闭目录">×</button>
+                </div>
+                <nav class="blog-tree" id="blog-tree" aria-label="文章目录">
+                    <div class="reader-state">正在加载目录...</div>
+                </nav>
+            </aside>
+
+            <section class="blog-panel blog-reader-panel" aria-live="polite">
+                <div class="reader-topbar">
+                    <button class="mobile-tree-button" id="open-tree" type="button" aria-label="打开目录">☰</button>
+                    <div class="reader-title-wrap">
+                        <h1 class="reader-title" id="reader-title">博客</h1>
+                        <div class="breadcrumbs" id="breadcrumbs">
+                            <span>openblog</span>
+                        </div>
                     </div>
                 </div>
+                <article class="markdown-body" id="markdown-body">
+                    <div class="reader-state">
+                        <div>
+                            <div class="spinner" aria-hidden="true"></div>
+                            <p>正在加载第一篇文章...</p>
+                        </div>
+                    </div>
+                </article>
+            </section>
 
-                <!-- 博客文章 2 -->
-                <div class="blog-post ui-block-a">
-                    <div class="blog-post-title">
-                        <a href="#">网站建设心得分享</a>
+            <aside class="blog-panel blog-side-panel" aria-label="推荐栏">
+                <section class="blog-side-section">
+                    <div class="blog-side-section-title">随机推荐</div>
+                    <div class="recommendation-list" id="random-list">
+                        <div class="empty-side">正在加载推荐...</div>
                     </div>
-                    <div class="blog-post-meta">
-                        发布于: 2026-04-25 | 分类: 技术分享 | 阅读: 89
-                    </div>
-                    <div class="blog-post-excerpt">
-                        记录一下网站建设过程中的一些心得和经验，包括前端设计、后端开发和服务器配置等方面的内容。
-                    </div>
-                    <div class="blog-post-readmore">
-                        <a href="#">阅读全文 →</a>
-                    </div>
-                </div>
+                </section>
+                <section class="blog-side-section">
+                    <div class="blog-side-section-title">相关推荐</div>
+                    <div class="empty-side"></div>
+                </section>
+                <section class="blog-side-section">
+                    <div class="blog-side-section-title">热度文章</div>
+                    <div class="empty-side"></div>
+                </section>
+            </aside>
 
-                <!-- 博客文章 3 -->
-                <div class="blog-post ui-block-a">
-                    <div class="blog-post-title">
-                        <a href="#">MCSS底刊投稿指南</a>
-                    </div>
-                    <div class="blog-post-meta">
-                        发布于: 2026-04-24 | 分类: 底刊公告 | 阅读: 156
-                    </div>
-                    <div class="blog-post-excerpt">
-                        详细介绍MCSS-千年民科网络底刊的投稿流程和要求，欢迎各位作者踊跃投稿！
-                    </div>
-                    <div class="blog-post-readmore">
-                        <a href="#">阅读全文 →</a>
-                    </div>
-                </div>
+            <div class="tree-backdrop" id="tree-backdrop" aria-hidden="true"></div>
+        </main>
 
-                <!-- 分页 -->
-                <div class="mt-20 text-center">
-                    <a href="#" class="btn">上一页</a>
-                    <a href="#" class="btn" style="background: #4a90e2; color: white;">1</a>
-                    <a href="#" class="btn">2</a>
-                    <a href="#" class="btn">3</a>
-                    <a href="#" class="btn">下一页</a>
-                </div>
-            </div>
-
-            <!-- 分类导航 -->
-            <div class="section">
-                <div class="section-title">文章分类</div>
-                <div class="ui-block-a">
-                    <ul class="list">
-                        <li>
-                            <a href="#">技术分享 (12)</a>
-                        </li>
-                        <li>
-                            <a href="#">网站公告 (5)</a>
-                        </li>
-                        <li>
-                            <a href="#">底刊公告 (8)</a>
-                        </li>
-                        <li>
-                            <a href="#">生活感悟 (3)</a>
-                        </li>
-                        <li>
-                            <a href="#">其他 (2)</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            &copy; 2026 千年民科网络 Soph Dot Net
+        <div class="footer blog-footer">
+            &copy; 2026 Soph Dot Net
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        const state = {
+            tree: null,
+            selectedPath: null,
+            expandedDirectories: new Set(),
+            sessionSeed: readSessionSeed()
+        };
+
+        const elements = {
+            tree: document.getElementById('blog-tree'),
+            title: document.getElementById('reader-title'),
+            breadcrumbs: document.getElementById('breadcrumbs'),
+            body: document.getElementById('markdown-body'),
+            randomList: document.getElementById('random-list'),
+            openTree: document.getElementById('open-tree'),
+            closeTree: document.getElementById('close-tree'),
+            backdrop: document.getElementById('tree-backdrop')
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
             startFaviconRotation();
+            bindMobileTree();
+            loadBlog();
+            recordPageView();
         });
 
-        // Favicon轮换功能
+        function readSessionSeed() {
+            try {
+                const key = 'soph-blog-seed';
+                const existing = sessionStorage.getItem(key);
+                if (existing) return existing;
+                const next = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+                sessionStorage.setItem(key, next);
+                return next;
+            } catch (error) {
+                return 'fallback-session';
+            }
+        }
+
+        function bindMobileTree() {
+            elements.openTree.addEventListener('click', function () {
+                document.body.classList.add('tree-open');
+            });
+            elements.closeTree.addEventListener('click', closeTreeDrawer);
+            elements.backdrop.addEventListener('click', closeTreeDrawer);
+        }
+
+        function closeTreeDrawer() {
+            document.body.classList.remove('tree-open');
+        }
+
+        async function loadBlog() {
+            try {
+                const [tree] = await Promise.all([
+                    fetchJson('/api/blog/tree'),
+                    loadRecommendations()
+                ]);
+                state.tree = tree;
+                expandInitialDirectories(tree);
+                renderTree();
+
+                const requested = new URLSearchParams(window.location.search).get('path');
+                const firstPost = requested || findFirstFile(tree);
+                if (firstPost) {
+                    await loadPost(firstPost, { pushState: !requested });
+                } else {
+                    renderEmpty();
+                }
+            } catch (error) {
+                renderError('无法加载博客目录', error);
+            }
+        }
+
+        async function loadRecommendations() {
+            try {
+                const posts = await fetchJson('/api/blog/random?count=5&seed=' + encodeURIComponent(state.sessionSeed));
+                if (!posts.length) {
+                    elements.randomList.innerHTML = '<div class="empty-side">暂无推荐文章</div>';
+                    return;
+                }
+
+                elements.randomList.innerHTML = '';
+                for (const post of posts) {
+                    const link = document.createElement('a');
+                    link.className = 'recommendation-item';
+                    link.href = '?path=' + encodeURIComponent(post.path);
+                    link.innerHTML = '<span class="recommendation-title"></span><span class="recommendation-path"></span>';
+                    link.querySelector('.recommendation-title').textContent = post.title;
+                    link.querySelector('.recommendation-path').textContent = post.path;
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        loadPost(post.path, { pushState: true });
+                    });
+                    elements.randomList.appendChild(link);
+                }
+            } catch (error) {
+                elements.randomList.innerHTML = '<div class="empty-side blog-error">推荐加载失败</div>';
+            }
+        }
+
+        async function fetchJson(url) {
+            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.error || response.statusText);
+            }
+            return response.json();
+        }
+
+        function expandInitialDirectories(tree) {
+            const first = findFirstFile(tree);
+            if (!first) return;
+            const segments = first.split('/');
+            let current = '';
+            for (let index = 0; index < segments.length - 1; index += 1) {
+                current = current ? current + '/' + segments[index] : segments[index];
+                state.expandedDirectories.add(current);
+            }
+        }
+
+        function renderTree() {
+            elements.tree.innerHTML = '';
+            if (!state.tree || !state.tree.children || !state.tree.children.length) {
+                elements.tree.innerHTML = '<div class="reader-state">暂无 Markdown 文件</div>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            for (const child of state.tree.children) {
+                fragment.appendChild(renderTreeNode(child, ''));
+            }
+            elements.tree.appendChild(fragment);
+        }
+
+        function renderTreeNode(node, parentPath) {
+            const nodePath = parentPath ? parentPath + '/' + node.name : node.name;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tree-node';
+
+            if (node.type === 'directory') {
+                const expanded = state.expandedDirectories.has(nodePath);
+                wrapper.classList.toggle('expanded', expanded);
+
+                const button = document.createElement('button');
+                button.className = 'tree-row';
+                button.type = 'button';
+                button.innerHTML = '<span class="tree-toggle"></span><span class="tree-icon">▣</span><span class="tree-name"></span>';
+                button.querySelector('.tree-toggle').textContent = expanded ? '▾' : '▸';
+                button.querySelector('.tree-name').textContent = node.name;
+                button.addEventListener('click', function () {
+                    if (state.expandedDirectories.has(nodePath)) {
+                        state.expandedDirectories.delete(nodePath);
+                    } else {
+                        state.expandedDirectories.add(nodePath);
+                    }
+                    renderTree();
+                });
+                wrapper.appendChild(button);
+
+                const children = document.createElement('div');
+                children.className = 'tree-children';
+                for (const child of node.children || []) {
+                    children.appendChild(renderTreeNode(child, nodePath));
+                }
+                wrapper.appendChild(children);
+                return wrapper;
+            }
+
+            const button = document.createElement('button');
+            button.className = 'tree-row';
+            button.classList.toggle('active', state.selectedPath === node.path);
+            button.type = 'button';
+            button.innerHTML = '<span class="tree-toggle"></span><span class="tree-icon">□</span><span class="tree-name"></span>';
+            button.querySelector('.tree-name').textContent = node.name;
+            button.addEventListener('click', function () {
+                loadPost(node.path, { pushState: true });
+            });
+            wrapper.appendChild(button);
+            return wrapper;
+        }
+
+        async function loadPost(path, options) {
+            state.selectedPath = path;
+            expandDirectoriesForPath(path);
+            renderTree();
+            closeTreeDrawer();
+            renderLoading();
+
+            try {
+                const post = await fetchJson('/api/blog/read?path=' + encodeURIComponent(path));
+                state.selectedPath = post.path;
+                elements.title.textContent = post.title;
+                renderBreadcrumbs(post.breadcrumbs);
+                elements.body.innerHTML = post.html;
+                if (options && options.pushState) {
+                    const nextUrl = new URL(window.location.href);
+                    nextUrl.searchParams.set('path', post.path);
+                    window.history.pushState({ path: post.path }, post.title, nextUrl);
+                }
+            } catch (error) {
+                renderError('文章加载失败', error);
+            }
+        }
+
+        function renderLoading() {
+            elements.body.innerHTML = '<div class="reader-state"><div><div class="spinner" aria-hidden="true"></div><p>正在加载文章...</p></div></div>';
+        }
+
+        function renderEmpty() {
+            elements.title.textContent = '博客';
+            elements.breadcrumbs.innerHTML = '<span>openblog</span>';
+            elements.body.innerHTML = '<div class="reader-state">暂无 Markdown 文章</div>';
+        }
+
+        function renderError(title, error) {
+            elements.title.textContent = title;
+            elements.body.innerHTML = '<div class="reader-state blog-error"></div>';
+            elements.body.querySelector('.blog-error').textContent = error.message || '未知错误';
+        }
+
+        function renderBreadcrumbs(parts) {
+            elements.breadcrumbs.innerHTML = '';
+            for (const part of parts) {
+                const span = document.createElement('span');
+                span.textContent = part;
+                elements.breadcrumbs.appendChild(span);
+            }
+        }
+
+        function expandDirectoriesForPath(filePath) {
+            const segments = filePath.split('/');
+            let current = '';
+            for (let index = 0; index < segments.length - 1; index += 1) {
+                current = current ? current + '/' + segments[index] : segments[index];
+                state.expandedDirectories.add(current);
+            }
+        }
+
+        function findFirstFile(node) {
+            if (!node) return null;
+            if (node.type === 'file') return node.path;
+            for (const child of node.children || []) {
+                const found = findFirstFile(child);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        window.addEventListener('popstate', function () {
+            const requested = new URLSearchParams(window.location.search).get('path');
+            if (requested) {
+                loadPost(requested, { pushState: false });
+            }
+        });
+
+        function recordPageView() {
+            fetch('/api/pageview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: window.location.pathname })
+            }).catch(function () {});
+        }
+
         let faviconIndex = 0;
-        const favicons = ['icon01.png', 'icon02.png', 'icon03.png'];
-        
+        const favicons = ['icon01.gif', 'icon02.gif', 'icon03.gif'];
+
         function startFaviconRotation() {
-            setInterval(() => {
+            setInterval(function () {
                 faviconIndex = (faviconIndex + 1) % favicons.length;
                 const favicon = document.getElementById('favicon');
                 favicon.href = favicons[faviconIndex];
-            }, 5000); // 每5秒切换一次
+            }, 5000);
         }
     </script>
 </body>

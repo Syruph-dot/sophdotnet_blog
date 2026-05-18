@@ -1,0 +1,17 @@
+{
+  "name": "sophdotnet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Soph Dot Net static site with Markdown blog APIs.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12"
+  }
+}
