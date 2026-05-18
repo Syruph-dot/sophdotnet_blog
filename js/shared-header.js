@@ -1,6 +1,74 @@
 (function () {
     const defaultTheme = 'theme-c';
     const headerUrl = 'include/header.html';
+    const criticalStyleId = 'shared-header-critical-style';
+    const criticalHeaderCss = `
+.shared-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 18px;
+}
+.shared-header-title {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+.shared-header-title img {
+    display: block;
+    max-width: min(50vw, 320px);
+    height: auto;
+}
+.shared-header select {
+    flex-shrink: 0;
+    width: auto;
+    max-width: 45%;
+}
+.shared-home-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    text-align: right;
+}
+.shared-home-link-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 16px;
+    width: 100%;
+}
+.shared-home-links a {
+    color: #666;
+    text-decoration: none;
+}
+.shared-home-links a:hover {
+    color: #333;
+    text-decoration: underline;
+}
+@media (max-width: 480px) {
+    .shared-header {
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 15px;
+    }
+    .shared-header-title img {
+        max-width: 55vw;
+    }
+    .shared-header select {
+        max-width: 40%;
+    }
+    .shared-home-link-list {
+        justify-content: flex-start;
+    }
+}`;
     const fallbackHeaderHtml = `
 <div class="header text-left shared-header">
     <a href="index.html" class="shared-header-title">
@@ -67,6 +135,14 @@
         syncThemeSelect();
     }
 
+    function ensureCriticalStyle() {
+        if (document.getElementById(criticalStyleId)) return;
+        const style = document.createElement('style');
+        style.id = criticalStyleId;
+        style.textContent = criticalHeaderCss;
+        document.head.appendChild(style);
+    }
+
     async function fetchHeaderHtml() {
         if (window.location.protocol === 'file:') {
             return fallbackHeaderHtml;
@@ -92,6 +168,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        ensureCriticalStyle();
         window.loadSavedTheme();
         loadSharedHeader();
     });
