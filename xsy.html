@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西山漾整活校友会</title>
+    <link rel="stylesheet" href="css/mobile-framework.css">
+    <style>
+        /* ====== 全局重置 ====== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ====== 加载页面 ====== */
+        #loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, #CC0000, #FF8C00, #FFD700);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* portrait 大图 */
+        #loader .portrait {
+            width: min(70vw, 400px);
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+            margin-bottom: 60px;
+        }
+
+        /* 加载文字 */
+        #loader .loading-text {
+            color: #fff;
+            font-size: 18px;
+            letter-spacing: 4px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        /* ====== 进度条滑块（复刻 index 样式） ====== */
+        #loader .progress-wrap {
+            position: relative;
+            width: min(80vw, 400px);
+            height: 20px;
+        }
+        #loader .progress-wrap input[type="range"] {
+            position: absolute;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: default;
+            z-index: 5;
+            margin: 0; padding: 0;
+            pointer-events: none;
+        }
+        #loader .progress-left {
+            position: absolute;
+            left: 0; top: 0;
+            width: 10px; height: 20px;
+            background: url('images/BarL.png') no-repeat center;
+            background-size: cover;
+            filter: url(#remove-black);
+            z-index: 3;
+        }
+        #loader .progress-fill {
+            position: absolute;
+            left: 10px; top: 0;
+            height: 20px; width: 0;
+            background: url('images/BarF.png') repeat-x center;
+            background-size: auto 100%;
+            z-index: 1;
+        }
+        #loader .progress-right {
+            position: absolute;
+            top: 0;
+            width: 10px; height: 20px;
+            background: url('images/BarR.png') no-repeat center;
+            background-size: cover;
+            filter: url(#remove-black);
+            z-index: 3;
+        }
+        #loader .progress-thumb {
+            position: absolute;
+            width: 30px; height: 30px;
+            background: url('images/BarR.png') no-repeat center;
+            background-size: contain;
+            pointer-events: none;
+            z-index: 4;
+            transform: translateX(-50%);
+            top: -5px;
+        }
+
+        /* ====== 主内容（加载后显示） ====== */
+        #main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        #main-content.show {
+            opacity: 1;
+        }
+        body {
+            background: #f5f5f5;
+        }
+        .banner {
+            width: 100%;
+            max-width: 600px;
+            height: 200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #e0e0e0, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: var(--bg-image, linear-gradient(135deg, #e0e0e0, #f0f0f0));
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(8px);
+            transform: scale(1.1);
+            z-index: 0;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        .banner.fade-out::before { opacity: 0; }
+        .banner .slides {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        .banner .slide {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .banner img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        .home-links {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            text-align: right;
+        }
+        .home-links a { color: #666; text-decoration: none; margin: 0 8px; }
+        .home-links a:hover { color: #333; text-decoration: underline; }
+        .column { text-align: center; padding: 15px 10px; }
+        .column-icon {
+            width: 80px; height: 80px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #f0f0f0, #e8e8e8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 12px;
+        }
+        .column-icon.icon-firstchar {
+            font-size: 32px; font-weight: 700; color: #fff;
+        }
+        .column-icon.icon-firstchar a { display: contents; color: inherit; text-decoration: none; }
+        .column-title { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 5px; }
+        .column-desc { font-size: 12px; color: #888; }
+        .section { margin-bottom: 30px; }
+        .section-title {
+            font-size: 16px; font-weight: 600; color: #333;
+            margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <svg style="display: none;">
+        <filter id="remove-black" x="-50%" y="-50%" width="200%" height="200%">
+            <feColorMatrix type="matrix" values="
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                1 1 1 1 -1
+            " result="inverse"/>
+            <feComposite in="SourceGraphic" in2="inverse" operator="arithmetic" k2="1" k3="-1" k1="0" result="transparent"/>
+            <feBlend in="transparent" in2="SourceGraphic" mode="normal"/>
+        </filter>
+    </svg>
+
+    <!-- ====== 加载页面 ====== -->
+    <div id="loader">
+        <img class="portrait" src="images/portrait.jpg" alt="portrait">
+        <div class="loading-text">西山漾整活校友会</div>
+        <div class="progress-wrap">
+            <div class="progress-fill"></div>
+            <div class="progress-left"></div>
+            <div class="progress-right"></div>
+            <div class="progress-thumb"></div>
+            <input type="range" min="0" max="100" value="0" id="progress-input">
+        </div>
+    </div>
+
+    <!-- ====== 主内容 ====== -->
+    <div id="main-content">
+        <div class="page">
+            <div class="header text-left">
+                <img src="images/title.png" alt="西山漾整活校友会" style="max-width: 50%; height: auto;">
+            </div>
+            <div class="home-links">
+                <a href="index.html">返回首页</a>
+            </div>
+            <div class="banner">
+                <div class="slides">
+                    <div class="slide"><img src="images/banner4t3-1.PNG" alt="Banner 1"></div>
+                    <div class="slide"><img src="images/banner-2.webp" alt="Banner 2"></div>
+                    <div class="slide"><img src="images/banner-artifact-1.png" alt="Banner 3"></div>
+                    <div class="slide"><img src="images/banner-artifact-2.png" alt="Banner 4"></div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="section">
+                    <div class="section-title">西山漾整活校友会</div>
+                    <div class="column">
+                        <div class="column-icon icon-firstchar" style="background: linear-gradient(135deg, #CC0000, #FFD700);">西</div>
+                        <div class="column-title">欢迎来到西山漾</div>
+                        <div class="column-desc">民科民整活TV · 内容持续建设中</div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">&copy; 2011 千年民科网络 Soph Dot Net</div>
+        </div>
+    </div>
+
+    <script>
+        // ====== 进度条更新函数（复刻自 index.html） ======
+        function updateProgress(percent) {
+            const wrap = document.querySelector('.progress-wrap');
+            const fill = document.querySelector('.progress-fill');
+            const left = document.querySelector('.progress-left');
+            const right = document.querySelector('.progress-right');
+            const thumb = document.querySelector('.progress-thumb');
+
+            const handleWidth = 10;
+            const trackWidth = wrap.offsetWidth;
+            const availableWidth = trackWidth - handleWidth;
+            const fillWidth = (percent / 100) * availableWidth;
+
+            left.style.left = '0px';
+            fill.style.left = handleWidth + 'px';
+            fill.style.width = fillWidth + 'px';
+            right.style.left = (handleWidth + fillWidth) + 'px';
+            thumb.style.left = (handleWidth + fillWidth) + 'px';
+        }
+
+        // ====== 2 秒固定加载 ======
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('main-content');
+        const totalSteps = 60;       // 约 33ms 每帧 → 2 秒
+        let step = 0;
+
+        function tick() {
+            step++;
+            const pct = Math.min((step / totalSteps) * 100, 100);
+            updateProgress(pct);
+
+            if (step < totalSteps) {
+                requestAnimationFrame(tick);
+            } else {
+                // 加载完成 → 隐藏 loader，显示主内容
+                loader.classList.add('hidden');
+                mainContent.classList.add('show');
+
+                // 启动 banner 轮播（与 index 相同）
+                startBanner();
+            }
+        }
+
+        requestAnimationFrame(tick);
+
+        // ====== Banner 轮播（复制自 index.html） ======
+        function startBanner() {
+            let currentSlide = 0;
+            const slides = document.querySelector('.slides');
+            const banner = document.querySelector('.banner');
+            if (!slides || !banner) return;
+
+            const totalSlides = slides.children.length;
+
+            function updateBackground() {
+                const imgs = slides.querySelectorAll('.slide img');
+                if (imgs[currentSlide]) {
+                    banner.style.setProperty('--bg-image', 'url(' + imgs[currentSlide].src + ')');
+                }
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                banner.classList.add('fade-out');
+                setTimeout(function () {
+                    updateBackground();
+                    slides.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+                    banner.classList.remove('fade-out');
+                }, 250);
+            }
+
+            updateBackground();
+            setInterval(nextSlide, 5000);
+        }
+
+        // 窗口 resize 时重新计算进度条
+        window.addEventListener('resize', function () {
+            const input = document.getElementById('progress-input');
+            if (input) updateProgress(parseFloat(input.value) || 0);
+        });
+    </script>
+</body>
+</html>

@@ -7,6 +7,7 @@
     <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
     <link rel="stylesheet" href="css/github-calendar.css">
+    <link rel="stylesheet" href="css/ggmetro.css">
     <script src="js/github-calendar.min.js"></script>
     <style>
         body {
@@ -147,24 +148,28 @@
             overflow: hidden;
             position: relative;
             border-radius: 12px;
-            box-shadow: 
-                0 4px 15px rgba(64, 224, 208, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                inset 0 -1px 0 rgba(0, 139, 139, 0.2);
-            border: 1px solid rgba(64, 224, 208, 0.3);
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
         .github-calendar {
             margin-top: 0;
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: hidden;
+            overflow-y: hidden;
             padding: 15px;
-            background: linear-gradient(135deg, rgba(64, 224, 208, 0.1), rgba(72, 209, 204, 0.15), rgba(175, 238, 238, 0.1));
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.92),
+                rgba(242, 242, 242, 0.8),
+                rgba(232, 232, 232, 0.6));
         }
         .github-calendar .calendar {
             width: 100%;
             min-width: 300px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         .github-calendar-container::before {
             content: '';
@@ -194,15 +199,15 @@
         }
         .github-calendar .calendar .width-full {
             max-width: 100% !important;
-            width: auto !important;
+            width: 100% !important;
         }
         .github-calendar .contribution-activity {
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
         .github-calendar .js-contribution-graph {
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
         .github-calendar .width-full {
             max-width: 100% !important;
@@ -210,25 +215,11 @@
         .github-calendar table {
             max-width: 100%;
             width: auto !important;
+            margin-left: auto;
+            margin-right: auto;
         }
         .github-calendar .day {
             border-radius: 3px;
-        }
-        .github-calendar .day[data-level="0"] {
-            background-color: rgba(64, 224, 208, 0.05);
-        }
-        .github-calendar .day[data-level="1"] {
-            background-color: rgba(64, 224, 208, 0.25);
-        }
-        .github-calendar .day[data-level="2"] {
-            background-color: rgba(64, 224, 208, 0.5);
-        }
-        .github-calendar .day[data-level="3"] {
-            background-color: rgba(64, 224, 208, 0.75);
-        }
-        .github-calendar .day[data-level="4"] {
-            background-color: rgba(64, 224, 208, 1);
-            box-shadow: 0 0 8px rgba(64, 224, 208, 0.6);
         }
         @keyframes bubbleFloat {
             0%, 100% {
@@ -478,6 +469,8 @@
                 GitHubCalendar(".calendar", "Syruph-dot", {
                     responsive: true,
                     tooltips: true,
+                    global_stats: false,
+                    months: 6,
                     summary_text: '年度贡献统计'
                 }).then(() => {
                     // 自动滚动到最新日期（最右侧）
@@ -547,6 +540,11 @@
                         <div class="column-icon icon-image"> <a href="potato_tv.html" target="_blank">[Image]</a></div>
                         <div class="column-title"> <a href="potato_tv.html" target="_blank">土豆网TV</a></div>
                         <div class="column-desc">低音画质媒体，Artifact艺术</div>
+                    </div>
+                    <div class="column">
+                        <div class="column-icon icon-firstchar" style="background: #d7eda1;">X</div>
+                        <div class="column-title"> <a href="xsy.html" target="_blank">西山漾整活校友会</a></div>
+                        <div class="column-desc">西山漾民科民整活TV</div>
                     </div>
                     <div class="column">
                         <div class="column-icon icon-image">[Image]</div>

@@ -30,9 +30,9 @@ body {
     --aero-white-40: rgba(255, 255, 255, 0.4);
     --aero-white-60: rgba(255, 255, 255, 0.6);
     --aero-white-80: rgba(255, 255, 255, 0.8);
-    --aero-crystal-1: rgba(64, 224, 208, 0.9);
-    --aero-crystal-2: rgba(72, 209, 204, 0.8);
-    --aero-crystal-3: rgba(127, 255, 212, 0.7);
+    --aero-crystal-1: rgba(37, 129, 119, 0.9);
+    --aero-crystal-2: rgba(54, 157, 153, 0.8);
+    --aero-crystal-3: rgba(113, 226, 188, 0.7);
     --aero-crystal-4: rgba(175, 238, 238, 0.8);
     --aero-crystal-5: rgba(224, 255, 255, 0.9);
 }
