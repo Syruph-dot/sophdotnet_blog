@@ -38,7 +38,7 @@
   border: 1px solid var(--gg-border) !important;
   border-radius: 12px !important;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* 顶部高光线 — 仿 .aero .content::before */

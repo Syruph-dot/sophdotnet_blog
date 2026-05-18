@@ -130,7 +130,7 @@
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
             border-radius: 12px;
             box-shadow:
@@ -142,8 +142,8 @@
         .github-calendar {
             margin-top: 0;
             max-width: 100%;
-            overflow-x: hidden;
-            overflow-y: hidden;
+            overflow-x: visible;
+            overflow-y: visible;
             padding: 15px;
             background: linear-gradient(135deg,
                 rgba(255, 255, 255, 0.92),
@@ -191,11 +191,11 @@
         }
         .github-calendar .contribution-activity {
             max-width: 100%;
-            overflow-x: hidden;
+            overflow-x: visible;
         }
         .github-calendar .js-contribution-graph {
             max-width: 100%;
-            overflow-x: hidden;
+            overflow-x: visible;
         }
         .github-calendar .width-full {
             max-width: 100% !important;
@@ -391,10 +391,29 @@
                     months: 6,
                     summary_text: '年度贡献统计'
                 }).then(() => {
+                    releaseCalendarGlowOverflow();
                     // 自动滚动到最新日期（最右侧）
                     const container = document.querySelector('.github-calendar');
                     if (container) {
                         container.scrollLeft = container.scrollWidth;
+                    }
+                });
+            }
+
+            function releaseCalendarGlowOverflow() {
+                const calendar = document.querySelector('.github-calendar');
+                if (!calendar) return;
+
+                calendar.style.overflow = 'visible';
+                calendar.style.overflowX = 'visible';
+                calendar.style.overflowY = 'visible';
+
+                calendar.querySelectorAll('*').forEach((el) => {
+                    const inlineStyle = el.getAttribute('style') || '';
+                    if (inlineStyle.includes('overflow')) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
                     }
                 });
             }

@@ -33,7 +33,7 @@ td.ContributionCalendar-day {
     cursor: pointer;
     isolation: isolate;
     overflow: visible;
-    transition: filter 140ms ease, transform 140ms ease;
+    transition: filter 140ms ease;
 }
 
 td.ContributionCalendar-day .calendar-day-core,
@@ -41,6 +41,11 @@ td.ContributionCalendar-day .calendar-day-glow {
     position: absolute;
     display: block;
     pointer-events: none;
+    transform-origin: center center;
+    transition:
+        filter 140ms ease,
+        opacity 140ms ease,
+        transform 140ms ease;
 }
 
 td.ContributionCalendar-day:not([data-date]) .calendar-day-core,
@@ -58,37 +63,52 @@ td.ContributionCalendar-day .calendar-day-core {
 td.ContributionCalendar-day .calendar-day-glow {
     background: var(--calendar-day-color, var(--color-calendar-graph-day-bg));
     border-radius: 0;
-    filter: blur(3.4px);
-    opacity: 0.55;
+    filter: blur(0px);
+    opacity: 0.75;
     z-index: 1;
 }
 
 td.ContributionCalendar-day .calendar-day-glow-x {
-    left: -28%;
-    right: -28%;
-    top: 39%;
-    bottom: 39%;
+    left: -38%;
+    right: -38%;
+    top: 19%;
+    bottom: 19%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        var(--calendar-day-color) 20%,
+        var(--calendar-day-color) 50%,
+        transparent 100%
+    );
 }
 
 td.ContributionCalendar-day .calendar-day-glow-y {
-    left: 39%;
-    right: 39%;
-    top: -28%;
-    bottom: -28%;
+    left: 19%;
+    right: 19%;
+    top: -38%;
+    bottom: -38%;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--calendar-day-color) 20%,
+        var(--calendar-day-color) 80%,
+        transparent 100%
+    );
 }
 
 td.ContributionCalendar-day:hover {
     filter: brightness(1.52);
-    transform: scale(2);
 }
 
 td.ContributionCalendar-day:hover .calendar-day-core {
     filter: blur(0.6px);
+    transform: scale(2);
 }
 
 td.ContributionCalendar-day:hover .calendar-day-glow {
-    filter: blur(3.2px);
-    opacity: 0.78;
+    filter: blur(1.3px);
+    opacity: 0.8;
+    transform: scale(2);
 }
 
 td.ContributionCalendar-day:hover .calendar-day-glow-x {
