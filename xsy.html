@@ -31,8 +31,6 @@
         #loader .portrait {
             width: min(70vw, 400px);
             height: auto;
-            border-radius: 16px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
             margin-bottom: 60px;
         }
 
@@ -85,16 +83,6 @@
             background-size: cover;
             filter: url(#remove-black);
             z-index: 3;
-        }
-        #loader .progress-thumb {
-            position: absolute;
-            width: 30px; height: 30px;
-            background: url('images/BarR.png') no-repeat center;
-            background-size: contain;
-            pointer-events: none;
-            z-index: 4;
-            transform: translateX(-50%);
-            top: -5px;
         }
 
         /* ====== 主内容（加载后显示） ====== */
@@ -195,13 +183,11 @@
     <svg style="display: none;">
         <filter id="remove-black" x="-50%" y="-50%" width="200%" height="200%">
             <feColorMatrix type="matrix" values="
-                0 0 0 0 0
-                0 0 0 0 0
-                0 0 0 0 0
-                1 1 1 1 -1
-            " result="inverse"/>
-            <feComposite in="SourceGraphic" in2="inverse" operator="arithmetic" k2="1" k3="-1" k1="0" result="transparent"/>
-            <feBlend in="transparent" in2="SourceGraphic" mode="normal"/>
+                1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                1 1 1 0 -0.08
+            "/>
         </filter>
     </svg>
 
@@ -213,7 +199,6 @@
             <div class="progress-fill"></div>
             <div class="progress-left"></div>
             <div class="progress-right"></div>
-            <div class="progress-thumb"></div>
             <input type="range" min="0" max="100" value="0" id="progress-input">
         </div>
     </div>
@@ -256,7 +241,6 @@
             const fill = document.querySelector('.progress-fill');
             const left = document.querySelector('.progress-left');
             const right = document.querySelector('.progress-right');
-            const thumb = document.querySelector('.progress-thumb');
 
             const handleWidth = 10;
             const trackWidth = wrap.offsetWidth;
@@ -267,7 +251,6 @@
             fill.style.left = handleWidth + 'px';
             fill.style.width = fillWidth + 'px';
             right.style.left = (handleWidth + fillWidth) + 'px';
-            thumb.style.left = (handleWidth + fillWidth) + 'px';
         }
 
         // ====== 2 秒固定加载 ======

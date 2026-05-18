@@ -170,6 +170,9 @@
             min-width: 300px;
             position: relative;
             overflow: visible;
+            display: block;        /* 覆盖库可能的 inline 设置 */
+            margin-left: auto;
+            margin-right: auto;
         }
         .github-calendar-container::before {
             content: '';
@@ -557,11 +560,11 @@
             <!-- 友情链接节 -->
             <div class="section">
                 <div class="section-title">友情链接</div>
-                <div class="grid-1">
+                <div class="grid-3">
                     <div class="column">
                         <div class="column-icon icon-firstchar" style="background: #a9b7ac;">T</div>
                         <div class="column-title"><a href="https://think3355.cn/index.php" target="_blank">Think3355</a></div>
-                        <div class="column-desc">Think3355 技术博客</div>
+                        <div class="column-desc">Think3355博客</div>
                     </div>
                     <div class="column">
                         <div class="column-icon icon-image">[Image]</div>
@@ -586,17 +589,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 示例滑块节 -->
-            <div class="section">
-                <div class="section-title">测试滑块</div>
-                <div class="custom-slider" style="margin: 20px auto;">
-                    <div class="custom-slider-fill"></div>
-                    <div class="custom-slider-left"></div>
-                    <div class="custom-slider-right"></div>
-                    <input type="range" min="0" max="100" value="50">
                 </div>
             </div>
         </div>
