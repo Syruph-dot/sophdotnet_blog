@@ -7,7 +7,7 @@ module.exports = {
             ignore_watch: ['node_modules', '.git', 'openblog/**/.git'],
             env: {
                 NODE_ENV: 'production',
-                PORT: 80
+                PORT: 8787
             }
         }
     ]

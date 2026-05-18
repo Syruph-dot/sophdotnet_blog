@@ -3,7 +3,7 @@ const path = require('node:path');
 const { createBlogService } = require('./blog-service');
 
 const app = express();
-const port = Number(process.env.PORT || 80);
+const port = Number(process.env.PORT || 8787);
 const siteRoot = __dirname;
 const blogRoot = path.join(siteRoot, 'openblog');
 
