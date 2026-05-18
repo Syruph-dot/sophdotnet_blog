@@ -98,6 +98,22 @@
             color: #aaa;
             font-size: 12px;
         }
+        .column-icon.icon-image a {
+            display: contents;
+            color: inherit;
+            text-decoration: none;
+        }
+        .column-icon.icon-firstchar {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            /* background 由内联 style 设定，支持纯色或渐变 */
+        }
+        .column-icon.icon-firstchar a {
+            display: contents;
+            color: inherit;
+            text-decoration: none;
+        }
         .column-title {
             font-size: 14px;
             font-weight: 500;
@@ -285,6 +301,22 @@
             z-index: 4;
             transform: translateX(-50%);
         }
+
+        /* 深色模式适配 */
+        .theme-a .section-title {
+            color: #eee;
+            border-bottom-color: #444;
+        }
+        .theme-a .column-title,
+        .theme-a .column-title a {
+            color: #eee;
+        }
+        .theme-a .column-desc {
+            color: #999;
+        }
+        .theme-a .column-icon.icon-firstchar {
+            color: #fff;
+        }
     </style>
 </head>
 <body class="theme-c">
@@ -445,7 +477,14 @@
             function initGitHubCalendar() {
                 GitHubCalendar(".calendar", "Syruph-dot", {
                     responsive: true,
+                    tooltips: true,
                     summary_text: '年度贡献统计'
+                }).then(() => {
+                    // 自动滚动到最新日期（最右侧）
+                    const container = document.querySelector('.github-calendar');
+                    if (container) {
+                        container.scrollLeft = container.scrollWidth;
+                    }
                 });
             }
 
@@ -495,22 +534,22 @@
                 <div class="section-title">导航</div>
                 <div class="grid-3">
                     <div class="column">
-                        <div class="column-icon"> <a href="blog.html" target="_blank">[Image]</a></div>
+                        <div class="column-icon icon-image"> <a href="blog.html" target="_blank">[Image]</a></div>
                         <div class="column-title"> <a href="blog.html" target="_blank">博客</a></div>
                         <div class="column-desc">技术分享与思考</div>
                     </div>
                     <div class="column">
-                        <div class="column-icon"> <a href="http://mcss.sophdotnet.com.cn/" target="_blank">[Image]</a></div>
+                        <div class="column-icon icon-image"> <a href="http://mcss.sophdotnet.com.cn/" target="_blank">[Image]</a></div>
                         <div class="column-title"> <a href="http://mcss.sophdotnet.com.cn/" target="_blank">MCSS-千年民科网络底刊</a></div>
                         <div class="column-desc">欢迎投递</div>
                     </div>
                     <div class="column">
-                        <div class="column-icon"> <a href="potato_tv.html" target="_blank">[Image]</a></div>
+                        <div class="column-icon icon-image"> <a href="potato_tv.html" target="_blank">[Image]</a></div>
                         <div class="column-title"> <a href="potato_tv.html" target="_blank">土豆网TV</a></div>
                         <div class="column-desc">低音画质媒体，Artifact艺术</div>
                     </div>
                     <div class="column">
-                        <div class="column-icon">[Image]</div>
+                        <div class="column-icon icon-image">[Image]</div>
                         <div class="column-title">更多内容</div>
                         <div class="column-desc">持续更新中</div>
                     </div>
@@ -522,12 +561,12 @@
                 <div class="section-title">友情链接</div>
                 <div class="grid-1">
                     <div class="column">
-                        <div class="column-icon">🔗</div>
+                        <div class="column-icon icon-firstchar" style="background: #a9b7ac;">T</div>
                         <div class="column-title"><a href="https://think3355.cn/index.php" target="_blank">Think3355</a></div>
                         <div class="column-desc">Think3355 技术博客</div>
                     </div>
                     <div class="column">
-                        <div class="column-icon">[Image]</div>
+                        <div class="column-icon icon-image">[Image]</div>
                         <div class="column-title">广告位招租</div>
                         <div class="column-desc">联系我们获取更多信息</div>
                     </div>
