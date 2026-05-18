@@ -6,23 +6,8 @@
     <title>博客 - 千年民科网络</title>
     <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
+    <script src="js/shared-header.js" defer></script>
     <style>
-        .home-links {
-            padding: 8px 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            text-align: right;
-        }
-        .home-links a {
-            color: #666;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .home-links a:hover {
-            color: #333;
-            text-decoration: underline;
-        }
         .blog-post {
             margin-bottom: 15px;
         }
@@ -62,62 +47,14 @@
         }
         
         /* 主题适配 */
-        .theme-a .home-links {
-            background: #2a2a2a;
-            border-bottom: 1px solid #444;
-        }
-        .theme-a .home-links a {
-            color: #ccc;
-        }
-        .theme-a .home-links a:hover {
-            color: white;
-        }
         .theme-a .blog-post-meta {
             color: #aaa;
-        }
-        .theme-b .home-links {
-            background: #f0f8ff;
-            border-bottom: 1px solid #b8daff;
-        }
-        .theme-b .home-links a {
-            color: #4a90e2;
-        }
-        .theme-b .home-links a:hover {
-            color: #2e7cd6;
-        }
-        .theme-e .home-links {
-            background: #fff9df;
-            border-bottom: 1px solid #f7c942;
         }
     </style>
 </head>
 <body class="theme-c">
     <div class="page">
-        <div class="header text-left">
-            <a href="index.html">
-                <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
-            </a>
-        </div>
-        <div class="home-links" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <a href="index.html">首页</a>
-                <a href="https://www.baidu.com" target="_blank">baidu.com</a>
-                <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
-                <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
-                <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
-            </div>
-            <div>
-                <select id="theme-select" onchange="changeTheme(this.value)">
-                    <option value="theme-c">默认主题</option>
-                    <option value="theme-a">深色主题</option>
-                    <option value="theme-b">蓝色主题</option>
-                    <option value="theme-d">白色主题</option>
-                    <option value="theme-e">黄色主题</option>
-                    <option value="aero">Aero主题</option>
-                    <option value="metro">Metro主题</option>
-                </select>
-            </div>
-        </div>
+        <div id="topbar-placeholder"></div>
 
         <div class="content">
             <!-- 博客文章列表 -->
@@ -213,27 +150,9 @@
     </div>
 
     <script>
-        // 主题切换功能
-        function changeTheme(theme) {
-            document.body.className = theme;
-            // 保存主题到本地存储
-            localStorage.setItem('theme', theme);
-        }
-
-        // 加载保存的主题
-        function loadSavedTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                document.body.className = savedTheme;
-                document.getElementById('theme-select').value = savedTheme;
-            }
-        }
-
-        // 页面加载时加载保存的主题
-        window.onload = function() {
-            loadSavedTheme();
+        document.addEventListener('DOMContentLoaded', function() {
             startFaviconRotation();
-        };
+        });
 
         // Favicon轮换功能
         let faviconIndex = 0;

@@ -6,6 +6,7 @@
     <title>土豆网TV - Soph Dot Net</title>
     <link rel="icon" id="favicon" href="icon01.png" type="image/png">
     <link rel="stylesheet" href="css/mobile-framework.css">
+    <script src="js/shared-header.js" defer></script>
     <style>
         body {
             background: #f5f5f5;
@@ -31,22 +32,6 @@
             font-size: 24px;
             color: #666;
             font-family: "FangSong", "仿宋", "STFangsong", serif;
-        }
-        .home-links {
-            padding: 8px 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            text-align: right;
-        }
-        .home-links a {
-            color: #666;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .home-links a:hover {
-            color: #333;
-            text-decoration: underline;
         }
         .big-card {
             display: block;
@@ -103,12 +88,7 @@
 </head>
 <body class="theme-c">
     <div class="page">
-        <div class="header text-left">
-            <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
-        </div>
-        <div class="home-links">
-            <a href="index.html">返回首页</a>
-        </div>
+        <div id="topbar-placeholder"></div>
         <div class="banner">
             <div class="banner-text">土豆网TV</div>
         </div>

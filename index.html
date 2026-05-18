@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/github-calendar.css">
     <link rel="stylesheet" href="css/ggmetro.css">
     <script src="js/github-calendar.min.js"></script>
+    <script src="js/shared-header.js" defer></script>
     <style>
         body {
             background: #f5f5f5;
@@ -66,22 +67,6 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: cover;
-        }
-        .home-links {
-            padding: 8px 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            text-align: right;
-        }
-        .home-links a {
-            color: #666;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .home-links a:hover {
-            color: #333;
-            text-decoration: underline;
         }
         .column {
             text-align: center;
@@ -327,29 +312,7 @@
         </filter>
     </svg>
     <div class="page">
-        <div class="header text-left">
-            <img src="images/title.png" alt="千年民科网络 - Soph Dot Net" style="max-width: 50%; height: auto;">
-        </div>
-        <div class="home-links" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <a href="#" onclick="setHomepage()">设为主页</a>
-                <a href="https://www.baidu.com" target="_blank">baidu.com</a>
-                <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
-                <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
-                <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
-            </div>
-            <div>
-                <select id="theme-select" onchange="changeTheme(this.value)">
-                    <option value="theme-c">默认主题</option>
-                    <option value="theme-a">深色主题</option>
-                    <option value="theme-b">蓝色主题</option>
-                    <option value="theme-d">白色主题</option>
-                    <option value="theme-e">黄色主题</option>
-                    <option value="aero">Aero主题</option>
-                    <option value="metro">Metro主题</option>
-                </select>
-            </div>
-        </div>
+        <div id="topbar-placeholder"></div>
         <div class="banner">
             <div class="slides">
                 <div class="slide">
@@ -368,32 +331,6 @@
         </div>
 
         <script>
-            // 设为主页功能
-            function setHomepage() {
-                const url = window.location.href;
-                try {
-                    if (window.netscape) {
-                        // Firefox
-                        window.netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-                        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-                        prefs.setCharPref("browser.startup.homepage", url);
-                        alert("已成功设置为主页");
-                    } else if (window.external) {
-                        // IE
-                        window.external.AddFavorite(url, "千年民科网络");
-                        alert("已成功设置为主页");
-                    } else if (window.sidebar) {
-                        // Opera
-                        alert("请使用浏览器菜单将本站设置为主页");
-                    } else {
-                        // Chrome, Safari等
-                        alert("请使用浏览器菜单将本站设置为主页");
-                    }
-                } catch (e) {
-                    alert("设置为主页失败，请手动设置");
-                }
-            }
-
             // Banner轮播功能
             let currentSlide = 0;
             const slides = document.querySelector('.slides');
@@ -432,28 +369,6 @@
 
             // 每5秒自动切换
             setInterval(nextSlide, 5000);
-
-            // 主题切换功能
-            function changeTheme(theme) {
-                document.body.className = theme;
-                // 保存主题到本地存储
-                localStorage.setItem('theme', theme);
-            }
-
-            // 加载保存的主题
-            function loadSavedTheme() {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) {
-                    document.body.className = savedTheme;
-                    document.getElementById('theme-select').value = savedTheme;
-                }
-            }
-
-            // 页面加载时加载保存的主题
-            window.onload = function() {
-                loadSavedTheme();
-                startFaviconRotation();
-            };
 
             // Favicon轮换功能
             let faviconIndex = 0;
@@ -515,13 +430,11 @@
                 });
             }
 
-            // 页面加载时加载保存的主题
-            window.onload = function() {
-                loadSavedTheme();
+            document.addEventListener('DOMContentLoaded', function() {
                 startFaviconRotation();
                 initGitHubCalendar();
                 initSliders();
-            };
+            });
         </script>
 
         <div class="content">
