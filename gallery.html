@@ -455,45 +455,17 @@
             folderGrid.innerHTML = '';
 
             try {
-                // 扫描gallery目录
-                const response = await fetch('images/gallery/');
-                const html = await response.text();
-                
-                // 解析HTML获取文件和文件夹
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a');
-                
-                const files = [];
-                const folders = [];
-                
-                links.forEach(link => {
-                    let href = link.getAttribute('href');
-                    if (href && href !== '../') {
-                        // 解码URL编码的中文字符
-                        try {
-                            href = decodeURIComponent(href);
-                        } catch (e) {
-                            // 如果解码失败，使用原始值
-                        }
-                        if (href.endsWith('/')) {
-                            // 文件夹
-                            folders.push(href.replace('/', ''));
-                        } else {
-                            // 文件
-                            files.push(href);
-                        }
-                    }
-                });
+                const response = await fetch('/api/gallery/tree');
+                if (!response.ok) {
+                    throw new Error(`Gallery API failed: ${response.status}`);
+                }
+                const galleryTree = await response.json();
 
-                // 显示根目录文件
-                for (const file of files) {
-                    const filePath = `images/gallery/${encodeURIComponent(file)}`;
-                    await displayFile(galleryGrid, filePath, file);
+                for (const file of galleryTree.files || []) {
+                    await displayFile(galleryGrid, file.url, file.name);
                 }
 
-                // 显示文件夹
-                for (const folder of folders) {
+                for (const folder of galleryTree.folders || []) {
                     await displayFolder(folderGrid, folder);
                 }
 
@@ -553,78 +525,41 @@
             });
         }
 
-        async function displayFolder(container, folderName) {
-            const folderPath = `images/gallery/${encodeURIComponent(folderName)}`;
-            
-            try {
-                // 扫描文件夹内容
-                const response = await fetch(folderPath + '/');
-                const html = await response.text();
-                
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a');
-                
-                const files = [];
-                links.forEach(link => {
-                    let href = link.getAttribute('href');
-                    if (href && href !== '../') {
-                        // 解码URL编码的中文字符
-                        try {
-                            href = decodeURIComponent(href);
-                        } catch (e) {
-                            // 如果解码失败，使用原始值
-                        }
-                        files.push(href);
-                    }
-                });
+        async function displayFolder(container, folder) {
+            const files = folder.files || [];
+            if (files.length === 0) return;
 
-                if (files.length === 0) return;
+            const folderItem = document.createElement('div');
+            folderItem.className = 'folder-item';
+            folderItem.innerHTML = `
+                <div class="folder-image-container">
+                    ${folder.coverUrl ? `<img class="folder-image" src="${folder.coverUrl}" alt="${folder.name}">` : ''}
+                    <div class="folder-overlay">${folder.name}</div>
+                </div>
+                <div class="folder-info">
+                    <div class="folder-name">${folder.name}</div>
+                    <div class="folder-count">${files.length} 个文件</div>
+                </div>
+                <div class="subfolder-grid cols-${currentColumns}">
+                    <!-- 子文件夹内容将通过JavaScript动态生成 -->
+                </div>
+            `;
+            container.appendChild(folderItem);
 
-                // 获取第一张图片作为封面
-                let coverImage = null;
-                for (const file of files) {
-                    if (file.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        coverImage = `${folderPath}/${encodeURIComponent(file)}`;
-                        break;
-                    }
+            // 点击展开/收起文件夹
+            folderItem.addEventListener('click', () => {
+                const subfolderGrid = folderItem.querySelector('.subfolder-grid');
+                if (subfolderGrid.classList.contains('show')) {
+                    subfolderGrid.classList.remove('show');
+                } else {
+                    subfolderGrid.classList.add('show');
+                    // 加载子文件夹内容
+                    loadSubfolderContent(subfolderGrid, files);
                 }
-
-                const folderItem = document.createElement('div');
-                folderItem.className = 'folder-item';
-                folderItem.innerHTML = `
-                    <div class="folder-image-container">
-                        ${coverImage ? `<img class="folder-image" src="${coverImage}" alt="${folderName}">` : ''}
-                        <div class="folder-overlay">${folderName}</div>
-                    </div>
-                    <div class="folder-info">
-                        <div class="folder-name">${folderName}</div>
-                        <div class="folder-count">${files.length} 个文件</div>
-                    </div>
-                    <div class="subfolder-grid cols-${currentColumns}" id="subfolder-${folderName}">
-                        <!-- 子文件夹内容将通过JavaScript动态生成 -->
-                    </div>
-                `;
-                container.appendChild(folderItem);
-
-                // 点击展开/收起文件夹
-                folderItem.addEventListener('click', () => {
-                    const subfolderGrid = folderItem.querySelector('.subfolder-grid');
-                    if (subfolderGrid.classList.contains('show')) {
-                        subfolderGrid.classList.remove('show');
-                    } else {
-                        subfolderGrid.classList.add('show');
-                        // 加载子文件夹内容
-                        loadSubfolderContent(subfolderGrid, folderPath, files);
-                    }
-                });
-
-            } catch (error) {
-                console.error('加载文件夹失败:', error);
-            }
+            });
         }
 
-        async function loadSubfolderContent(container, folderPath, files) {
+        async function loadSubfolderContent(container, files) {
             if (container.querySelector('.gallery-item')) return; // 已加载过
 
             let cols = 3;
@@ -641,8 +576,7 @@
             columnIndices.set(container, 0);
 
             for (const file of files) {
-                const filePath = `${folderPath}/${encodeURIComponent(file)}`;
-                await displayFile(container, filePath, file);
+                await displayFile(container, file.url, file.name);
             }
         }
 

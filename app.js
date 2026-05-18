@@ -1,17 +1,77 @@
 const express = require('express');
+const fs = require('node:fs/promises');
 const path = require('node:path');
 const { createBlogService } = require('./blog-service');
 
-const app = express();
 const port = Number(process.env.PORT || 8787);
-const siteRoot = __dirname;
-const blogRoot = path.join(siteRoot, 'openblog');
+const defaultSiteRoot = __dirname;
+const imageExtensions = new Set(['.avif', '.bmp', '.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp']);
 
-app.use(express.json());
+function isHiddenName(name) {
+    return name.startsWith('.');
+}
+
+function toGalleryUrl(relativeSegments) {
+    const encodedPath = relativeSegments.map((segment) => encodeURIComponent(segment)).join('/');
+    return `/images/gallery/${encodedPath}`;
+}
+
+async function scanGalleryDirectory(directory, relativeSegments = []) {
+    let entries;
+
+    try {
+        entries = await fs.readdir(directory, { withFileTypes: true });
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return { files: [], folders: [] };
+        }
+        throw error;
+    }
+
+    const files = [];
+    const folders = [];
+
+    for (const entry of entries) {
+        if (isHiddenName(entry.name)) continue;
+
+        const absolutePath = path.join(directory, entry.name);
+        const entrySegments = [...relativeSegments, entry.name];
+
+        if (entry.isDirectory()) {
+            const childTree = await scanGalleryDirectory(absolutePath, entrySegments);
+            folders.push({
+                name: entry.name,
+                path: entrySegments.join('/'),
+                files: childTree.files,
+                folders: childTree.folders,
+                count: childTree.files.length,
+                coverUrl: childTree.files[0]?.url || null
+            });
+        } else if (entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase())) {
+            files.push({
+                name: entry.name,
+                path: entrySegments.join('/'),
+                url: toGalleryUrl(entrySegments)
+            });
+        }
+    }
+
+    folders.sort((left, right) => left.name.localeCompare(right.name, 'zh-Hans-CN'));
+    files.sort((left, right) => left.name.localeCompare(right.name, 'zh-Hans-CN'));
+
+    return { files, folders };
+}
 
 async function createApp(options = {}) {
+    const app = express();
+    const siteRoot = path.resolve(options.siteRoot || defaultSiteRoot);
+    const blogRoot = options.blogRoot || path.join(siteRoot, 'openblog');
+    const galleryRoot = path.resolve(options.galleryRoot || path.join(siteRoot, 'images', 'gallery'));
+
+    app.use(express.json());
+
     const blogService = options.blogService || await createBlogService({
-        blogRoot: options.blogRoot || blogRoot,
+        blogRoot,
         watch: options.watch
     });
 
@@ -42,6 +102,14 @@ async function createApp(options = {}) {
             path: request.body?.path || request.get('referer') || null,
             recordedAt: new Date().toISOString()
         });
+    });
+
+    app.get('/api/gallery/tree', async (request, response, next) => {
+        try {
+            response.json(await scanGalleryDirectory(galleryRoot));
+        } catch (error) {
+            next(error);
+        }
     });
 
     app.use(express.static(siteRoot, {
@@ -77,5 +145,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-    createApp
+    createApp,
+    scanGalleryDirectory
 };

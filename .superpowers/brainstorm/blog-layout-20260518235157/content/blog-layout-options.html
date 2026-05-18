@@ -1,0 +1,112 @@
+﻿<h2>blog.html layout direction</h2>
+<p class="subtitle">Pick the direction you want me to implement. These are layout-level wireframes based on the current three-column reader: left tree, center article, right recommendations.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:230px;background:#eef4f8;border:1px solid #cfd9e2;border-radius:6px;padding:12px;display:grid;grid-template-columns:180px 1fr 170px;gap:10px;box-sizing:border-box;">
+        <div style="background:#202733;border-radius:5px;padding:10px;color:#dce6f0;font-size:11px;display:flex;flex-direction:column;gap:7px;">
+          <div style="height:14px;width:70%;background:#35465a;border-radius:3px;"></div>
+          <div style="height:12px;width:92%;background:#40536b;border-radius:3px;"></div>
+          <div style="height:12px;width:82%;background:#40536b;border-radius:3px;"></div>
+          <div style="height:12px;width:90%;background:#40536b;border-radius:3px;"></div>
+          <div style="height:12px;width:68%;background:#40536b;border-radius:3px;"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;padding:14px;">
+          <div style="height:18px;width:55%;background:#20364a;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:8px;width:65%;background:#b8c6d3;border-radius:99px;margin-bottom:18px;"></div>
+          <div style="height:10px;width:96%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:10px;width:90%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:10px;width:94%;background:#e4ebf1;border-radius:3px;margin-bottom:22px;"></div>
+          <div style="height:56px;background:#f4f8fb;border-left:5px solid #3b82b8;border-radius:4px;"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:8px;">
+          <div style="height:12px;width:65%;background:#52677a;border-radius:3px;"></div>
+          <div style="height:36px;background:#f5f8fb;border:1px solid #e2e8ef;border-radius:4px;"></div>
+          <div style="height:36px;background:#f5f8fb;border:1px solid #e2e8ef;border-radius:4px;"></div>
+          <div style="height:36px;background:#f5f8fb;border:1px solid #e2e8ef;border-radius:4px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Tight Reader</h3>
+      <p>Keep the current structure, but fix spacing, sticky sidebars, topbar density, and article width. Lowest risk and best if the current blog interaction is basically right.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:230px;background:#f5f7f9;border:1px solid #cfd9e2;border-radius:6px;padding:12px;box-sizing:border-box;display:grid;grid-template-rows:44px 1fr;gap:10px;">
+        <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;display:grid;grid-template-columns:1fr auto;align-items:center;padding:0 14px;">
+          <div>
+            <div style="height:14px;width:38%;background:#20364a;border-radius:3px;margin-bottom:6px;"></div>
+            <div style="height:7px;width:52%;background:#b8c6d3;border-radius:99px;"></div>
+          </div>
+          <div style="display:flex;gap:6px;"><div style="width:28px;height:28px;background:#eef4f8;border-radius:5px;"></div><div style="width:28px;height:28px;background:#eef4f8;border-radius:5px;"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:10px;min-height:0;">
+          <div style="background:#202733;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:7px;">
+            <div style="height:13px;width:70%;background:#35465a;border-radius:3px;"></div>
+            <div style="height:12px;width:95%;background:#40536b;border-radius:3px;"></div>
+            <div style="height:12px;width:82%;background:#40536b;border-radius:3px;"></div>
+            <div style="height:12px;width:89%;background:#40536b;border-radius:3px;"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;padding:14px;display:grid;grid-template-columns:1fr 150px;gap:12px;">
+            <div>
+              <div style="height:10px;width:96%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+              <div style="height:10px;width:90%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+              <div style="height:10px;width:94%;background:#e4ebf1;border-radius:3px;margin-bottom:18px;"></div>
+              <div style="height:70px;background:#f4f8fb;border-radius:4px;"></div>
+            </div>
+            <div style="border-left:1px solid #e2e8ef;padding-left:10px;display:flex;flex-direction:column;gap:8px;">
+              <div style="height:11px;width:75%;background:#52677a;border-radius:3px;"></div>
+              <div style="height:28px;background:#f5f8fb;border-radius:4px;"></div>
+              <div style="height:28px;background:#f5f8fb;border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Workspace Reader</h3>
+      <p>Make the top title area global and reduce the page to a two-column workspace, with recommendations attached to the reader. More modern and less visually crowded.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:230px;background:#f4f6f8;border:1px solid #cfd9e2;border-radius:6px;padding:12px;box-sizing:border-box;display:grid;grid-template-columns:1fr 210px;gap:10px;">
+        <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;padding:16px;">
+          <div style="height:20px;width:50%;background:#20364a;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:8px;width:64%;background:#b8c6d3;border-radius:99px;margin-bottom:20px;"></div>
+          <div style="height:11px;width:95%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:11px;width:86%;background:#e4ebf1;border-radius:3px;margin-bottom:8px;"></div>
+          <div style="height:11px;width:92%;background:#e4ebf1;border-radius:3px;margin-bottom:20px;"></div>
+          <div style="height:78px;background:#17202a;border-radius:5px;"></div>
+        </div>
+        <div style="display:grid;grid-template-rows:auto 1fr;gap:10px;">
+          <div style="background:#202733;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:7px;">
+            <div style="height:12px;width:72%;background:#35465a;border-radius:3px;"></div>
+            <div style="height:10px;width:94%;background:#40536b;border-radius:3px;"></div>
+            <div style="height:10px;width:86%;background:#40536b;border-radius:3px;"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #d9e0e7;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:8px;">
+            <div style="height:11px;width:68%;background:#52677a;border-radius:3px;"></div>
+            <div style="height:30px;background:#f5f8fb;border-radius:4px;"></div>
+            <div style="height:30px;background:#f5f8fb;border-radius:4px;"></div>
+            <div style="height:30px;background:#f5f8fb;border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Article First</h3>
+      <p>Give the article most of the viewport and push navigation/recommendations into a narrow right rail. Best for long-form reading, but changes the current mental model the most.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>My recommendation</h3>
+  <p>Implement B unless you want a conservative polish pass. It keeps the file tree visible, makes reading calmer, and removes the current three-card feeling without hiding the blog navigation.</p>
+</div>
