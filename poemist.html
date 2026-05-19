@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诗雾 · Poemist - Soph Dot Net</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
+    <link rel="stylesheet" href="css/mobile-framework.css?v=20260518-scrollbar-hide">
+    <link rel="stylesheet" href="css/ggmetro.css?v=20260518-scrollbar-hide">
+    <script src="js/shared-header.js?v=20260518-shared-header" defer></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: #0f0f1a;
+        }
+
+        .poemist-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #0f0f1a;
+            color: #e0e0e0;
+        }
+
+        .poemist-app {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans SC", "Segoe UI", sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+        }
+
+        .poemist-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 14px 24px;
+            border-bottom: 1px solid #2a2a4a;
+            background: #1a1a2e;
+        }
+
+        .poemist-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #c0a0e0;
+        }
+
+        .poemist-subtitle {
+            margin-left: auto;
+            font-size: 12px;
+            color: #7d7590;
+        }
+
+        .poemist-mode-toggle {
+            display: flex;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #252540;
+        }
+
+        .poemist-mode-toggle button {
+            width: auto;
+            padding: 6px 16px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #9a92aa;
+            cursor: pointer;
+            font-size: 13px;
+            transition: color .15s, background .15s;
+        }
+
+        .poemist-mode-toggle button.active {
+            background: #4a3a6a;
+            color: #e0d0f0;
+        }
+
+        .poemist-mode-toggle button:hover:not(.active) {
+            color: #d8d0e5;
+        }
+
+        .poemist-chat {
+            flex: 1;
+            min-height: 360px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px 24px;
+        }
+
+        .poemist-msg {
+            max-width: 720px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.7;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .poemist-msg.user {
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            background: #2a2a4a;
+        }
+
+        .poemist-msg.assistant {
+            align-self: flex-start;
+            border: 1px solid #2a2a4a;
+            border-bottom-left-radius: 2px;
+            background: #1a1a2e;
+            color: #d0d0e0;
+        }
+
+        .poemist-label {
+            margin-bottom: 4px;
+            font-size: 11px;
+            color: #7f6bad;
+        }
+
+        .poemist-msg.user .poemist-label {
+            color: #78a0c8;
+        }
+
+        .poemist-loading {
+            display: flex;
+            gap: 6px;
+            padding: 8px 0;
+        }
+
+        .poemist-loading span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6a5a8a;
+            animation: poemist-bounce 1.2s infinite;
+        }
+
+        .poemist-loading span:nth-child(2) {
+            animation-delay: .2s;
+        }
+
+        .poemist-loading span:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+        @keyframes poemist-bounce {
+            0%, 80%, 100% { transform: scale(.6); }
+            40% { transform: scale(1); }
+        }
+
+        .poemist-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 14px 24px;
+            border-top: 1px solid #2a2a4a;
+            background: #1a1a2e;
+        }
+
+        .poemist-input-area textarea {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 10px 14px;
+            border: 1px solid #353560;
+            border-radius: 6px;
+            outline: none;
+            resize: none;
+            background: #252540;
+            color: #e0e0e0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .poemist-input-area textarea:focus {
+            border-color: #6a5a8a;
+            box-shadow: none;
+        }
+
+        .poemist-input-area button {
+            width: auto;
+            padding: 0 24px;
+            border: 0;
+            border-radius: 6px;
+            background: #4a3a6a;
+            color: #e0d0f0;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: background .15s;
+        }
+
+        .poemist-input-area button:hover {
+            background: #5a4a7a;
+        }
+
+        .poemist-input-area button:disabled {
+            background: #353560;
+            color: #777189;
+            cursor: not-allowed;
+        }
+
+        .poemist-placeholder {
+            padding: 40px 20px;
+            color: #706983;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .poemist-toolbar {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 12px 16px;
+            }
+
+            .poemist-subtitle {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .poemist-chat {
+                padding: 16px;
+            }
+
+            .poemist-msg {
+                max-width: 92%;
+            }
+
+            .poemist-input-area {
+                padding: 12px 16px;
+            }
+
+            .poemist-input-area button {
+                padding: 0 18px;
+            }
+        }
+    </style>
+</head>
+<body class="theme-c">
+    <div class="poemist-page">
+        <div id="topbar-placeholder"></div>
+        <main class="poemist-app" aria-label="诗雾聊天">
+            <div class="poemist-toolbar">
+                <div class="poemist-title">诗雾</div>
+                <div class="poemist-mode-toggle" aria-label="生成模式">
+                    <button id="modeMulti" type="button" class="active">多轮</button>
+                    <button id="modeSingle" type="button">单轮</button>
+                </div>
+                <span class="poemist-subtitle">Poemist · prefix-next 补完</span>
+            </div>
+            <div id="chat" class="poemist-chat">
+                <div class="poemist-placeholder">输入开头，模型补完诗句。<br>多轮模式：送入全部对话历史；单轮模式：只送当前输入。</div>
+            </div>
+            <div class="poemist-input-area">
+                <textarea id="input" rows="1" placeholder="输入诗句开头..." maxlength="200"></textarea>
+                <button id="sendBtn" type="button">生成</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const sendBtn = document.getElementById('sendBtn');
+        const modeMulti = document.getElementById('modeMulti');
+        const modeSingle = document.getElementById('modeSingle');
+        let mode = 'multi';
+        let history = [];
+
+        function setMode(nextMode) {
+            mode = nextMode;
+            modeMulti.classList.toggle('active', nextMode === 'multi');
+            modeSingle.classList.toggle('active', nextMode === 'single');
+            if (nextMode === 'single') history = [];
+        }
+
+        modeMulti.onclick = () => setMode('multi');
+        modeSingle.onclick = () => setMode('single');
+
+        function escHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function clearPlaceholder() {
+            const placeholder = chat.querySelector('.poemist-placeholder');
+            if (placeholder) placeholder.remove();
+        }
+
+        function addMsg(role, text) {
+            clearPlaceholder();
+            const message = document.createElement('div');
+            message.className = `poemist-msg ${role}`;
+            const label = role === 'user' ? '你' : '诗雾';
+            message.innerHTML = `<div class="poemist-label">${label}</div>${escHtml(text)}`;
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;
+            return message;
+        }
+
+        function showLoading() {
+            const message = document.createElement('div');
+            message.className = 'poemist-msg assistant';
+            message.id = 'loadingMsg';
+            message.innerHTML = '<div class="poemist-loading"><span></span><span></span><span></span></div>';
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loadingMsg');
+            if (loading) loading.remove();
+        }
+
+        async function generate() {
+            const prompt = input.value.trim();
+            if (!prompt) return;
+            input.value = '';
+            input.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            addMsg('user', prompt);
+            showLoading();
+
+            try {
+                const response = await fetch('/poemist/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, mode, history })
+                });
+                const data = await response.json();
+                hideLoading();
+                if (!response.ok || data.error) {
+                    addMsg('assistant', `[错误] ${data.error || '生成失败'}`);
+                    return;
+                }
+                addMsg('assistant', data.completion);
+                history.push({ role: 'user', text: prompt });
+                history.push({ role: 'assistant', text: data.completion });
+            } catch (error) {
+                hideLoading();
+                addMsg('assistant', `[请求失败] ${error.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        sendBtn.onclick = generate;
+        input.onkeydown = (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                generate();
+            }
+        };
+        input.oninput = () => {
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        };
+        setMode('multi');
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('node:fs/promises');
+const http = require('node:http');
 const path = require('node:path');
 const { createBlogService } = require('./blog-service');
 const { createEmbeddingService } = require('./embedding-service');
@@ -8,6 +9,49 @@ const { VALID_TIMEFRAMES, createStore, normalizeLimit } = require('./store');
 const port = Number(process.env.PORT || 8787);
 const defaultSiteRoot = __dirname;
 const imageExtensions = new Set(['.avif', '.bmp', '.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp']);
+
+function requestPoemistRuntime(payload, options = {}) {
+    const body = JSON.stringify(payload || {});
+    const runtime = {
+        host: options.host || process.env.POEMIST_RUNTIME_HOST || '127.0.0.1',
+        port: Number(options.port || process.env.POEMIST_RUNTIME_PORT || 5000),
+        path: options.path || process.env.POEMIST_RUNTIME_PATH || '/api/generate',
+        timeoutMs: Number(options.timeoutMs || process.env.POEMIST_RUNTIME_TIMEOUT_MS || 30000)
+    };
+
+    return new Promise((resolve, reject) => {
+        const proxyRequest = http.request({
+            hostname: runtime.host,
+            port: runtime.port,
+            path: runtime.path,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body)
+            },
+            timeout: runtime.timeoutMs
+        }, (proxyResponse) => {
+            let responseBody = '';
+            proxyResponse.setEncoding('utf8');
+            proxyResponse.on('data', (chunk) => {
+                responseBody += chunk;
+            });
+            proxyResponse.on('end', () => {
+                resolve({
+                    statusCode: proxyResponse.statusCode || 502,
+                    headers: proxyResponse.headers,
+                    body: responseBody
+                });
+            });
+        });
+
+        proxyRequest.on('timeout', () => {
+            proxyRequest.destroy(new Error('Poemist runtime timed out'));
+        });
+        proxyRequest.on('error', reject);
+        proxyRequest.end(body);
+    });
+}
 
 function isHiddenName(name) {
     return name.startsWith('.');
@@ -184,6 +228,19 @@ async function createApp(options = {}) {
         }
     });
 
+    app.post('/poemist/api/generate', async (request, response) => {
+        try {
+            const runtimeResponse = await requestPoemistRuntime(request.body, options.poemistRuntime || {});
+            response.status(runtimeResponse.statusCode);
+            response.type(runtimeResponse.headers['content-type'] || 'application/json');
+            response.send(runtimeResponse.body);
+        } catch (error) {
+            response.status(503).json({
+                error: 'Poemist runtime is unavailable. Please retry later.'
+            });
+        }
+    });
+
     app.use(express.static(siteRoot, {
         extensions: ['html']
     }));
@@ -218,5 +275,6 @@ if (require.main === module) {
 
 module.exports = {
     createApp,
+    requestPoemistRuntime,
     scanGalleryDirectory
 };

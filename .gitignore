@@ -3,4 +3,7 @@
 node_modules/
 dist/
 .superpowers/
-data/
+data/*
+!data/poemist/
+!data/poemist/*.poemist
+da'ta
