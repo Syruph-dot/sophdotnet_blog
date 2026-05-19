@@ -6,4 +6,5 @@ dist/
 data/*
 !data/poemist/
 !data/poemist/*.poemist
-da'ta
+.tmp/
+*.pyc
