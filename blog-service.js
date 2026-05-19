@@ -56,6 +56,12 @@ function createMarkdownRenderer(basePath = '') {
 
     renderer.code = function renderCode(token) {
         const language = typeof token.lang === 'string' ? token.lang.trim().split(/\s+/)[0] : '';
+
+        // Mermaid 图：原文输出，客户端 mermaid.js 渲染为 SVG
+        if (language === 'mermaid') {
+            return `<pre class="mermaid">${escapeHtml(token.text)}</pre>\n`;
+        }
+
         const highlighted = language && hljs.getLanguage(language)
             ? hljs.highlight(token.text, { language }).value
             : hljs.highlightAuto(token.text).value;

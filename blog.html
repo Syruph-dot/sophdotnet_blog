@@ -512,6 +512,26 @@
             }
         }
     </style>
+
+    <!-- Mermaid 图渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        .markdown-body .mermaid {
+            text-align: center;
+            margin: 1em 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+        }
+        .markdown-body .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .theme-a .markdown-body .mermaid {
+            background: #1e1e2e;
+        }
+    </style>
 </head>
 <body class="theme-c">
     <div class="page blog-page">
@@ -812,6 +832,7 @@
                 elements.title.textContent = post.title;
                 renderBreadcrumbs(post.breadcrumbs);
                 elements.body.innerHTML = post.html;
+                renderMermaid();
                 loadRelatedPosts(post.path);
                 recordPageView(post.path);
                 if (options && options.pushState) {
@@ -838,6 +859,14 @@
             elements.title.textContent = title;
             elements.body.innerHTML = '<div class="reader-state blog-error"></div>';
             elements.body.querySelector('.blog-error').textContent = error.message || '未知错误';
+        }
+
+        function renderMermaid() {
+            if (typeof mermaid === 'undefined') return;
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'base' });
+                mermaid.run({ querySelector: '.mermaid' });
+            } catch (_) { /* 静默失败，不影响文章阅读 */ }
         }
 
         function renderBreadcrumbs(parts) {
