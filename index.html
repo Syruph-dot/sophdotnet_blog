@@ -296,6 +296,28 @@
         .theme-a .column-icon.icon-firstchar {
             color: #fff;
         }
+
+        /* ===== GitHub 日历 — 手机自适应缩放 ===== */
+        @media (max-width: 820px) {
+            .github-calendar-container {
+                max-width: 100%;
+                width: 100%;
+                overflow: visible; /* 保留 glow 溢出可见 */
+                box-sizing: border-box;
+            }
+            .github-calendar {
+                padding: 10px;
+                transform-origin: top center;
+            }
+            .github-calendar .calendar {
+                min-width: unset;
+            }
+        }
+        @media (max-width: 480px) {
+            .github-calendar {
+                padding: 6px;
+            }
+        }
     </style>
 </head>
 <body class="theme-c">
@@ -392,6 +414,7 @@
                     summary_text: '年度贡献统计'
                 }).then(() => {
                     releaseCalendarGlowOverflow();
+                    fitCalendarToContainer();
                     // 自动滚动到最新日期（最右侧）
                     const container = document.querySelector('.github-calendar');
                     if (container) {
@@ -417,6 +440,42 @@
                     }
                 });
             }
+
+            // 手机自适应缩放：视口小于内容宽度时 scale 缩放到刚好撑满
+            function fitCalendarToContainer() {
+                const wrapper = document.querySelector('.github-calendar');
+                const container = document.querySelector('.github-calendar-container');
+                if (!wrapper || !container) return;
+
+                // 清除之前设置的 transform，获取真实尺寸
+                wrapper.style.transform = '';
+                wrapper.style.height = '';
+
+                const viewportWidth = window.innerWidth;
+                // 桌面端（>820px）不需要缩放，由 max-width 控制
+                if (viewportWidth > 820) return;
+
+                // 取实际表格/SVG宽度，排除 glow 伪影溢出
+                const table = wrapper.querySelector('table.js-calendar-graph-table, table.ContributionCalendar-grid');
+                const svg = wrapper.querySelector('.js-calendar-graph-svg');
+                const contentWidth = table
+                    ? table.offsetWidth
+                    : svg
+                        ? svg.getBoundingClientRect().width
+                        : wrapper.scrollWidth;
+
+                const containerWidth = container.clientWidth - 2;
+
+                if (contentWidth > containerWidth && contentWidth > 0) {
+                    const scale = Math.max(0.35, containerWidth / contentWidth);
+                    wrapper.style.transform = 'scale(' + scale + ')';
+                    wrapper.style.transformOrigin = 'top center';
+                    wrapper.style.height = (wrapper.scrollHeight * scale) + 'px';
+                }
+            }
+
+            // 窗口尺寸变化时重新适配
+            window.addEventListener('resize', fitCalendarToContainer);
 
             // 自定义滑块功能
             function initSliders() {
