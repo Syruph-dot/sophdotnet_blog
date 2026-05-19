@@ -107,6 +107,9 @@ class BlogService {
         this.watcher = null;
         this.refreshTimer = null;
         this.isRefreshing = false;
+        this.afterRefresh = typeof options.afterRefresh === 'function' ? options.afterRefresh : null;
+        this.readFile = options.readFile || ((...args) => fsp.readFile(...args));
+        this.titleCache = new Map();
     }
 
     async init() {
@@ -129,6 +132,9 @@ class BlogService {
                 children: tree.children
             };
             this.posts = await this.collectPosts(this.tree);
+            if (this.afterRefresh) {
+                await this.afterRefresh(this.getAllPosts());
+            }
         } finally {
             this.isRefreshing = false;
         }
@@ -190,8 +196,19 @@ class BlogService {
     async readTitleFromFile(relativePath, fileName) {
         try {
             const { absolutePath } = this.resolvePostPath(relativePath);
-            const markdown = await fsp.readFile(absolutePath, 'utf8');
-            return this.extractTitle(markdown, fileName);
+            const stat = await fsp.stat(absolutePath);
+            const cached = this.titleCache.get(relativePath);
+            if (cached && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
+                return cached.title;
+            }
+            const markdown = await this.readFile(absolutePath, 'utf8');
+            const title = this.extractTitle(markdown, fileName);
+            this.titleCache.set(relativePath, {
+                size: stat.size,
+                mtimeMs: stat.mtimeMs,
+                title
+            });
+            return title;
         } catch (error) {
             return withoutMarkdownExtension(fileName);
         }
@@ -203,6 +220,57 @@ class BlogService {
 
     getAllPosts() {
         return cloneJson(this.posts);
+    }
+
+    getPostMetadata(relativePath) {
+        const normalized = this.resolvePostPath(relativePath).normalizedPath;
+        return cloneJson(this.posts.find((post) => post.path === normalized) || null);
+    }
+
+    async getPostsWithMarkdown() {
+        const posts = [];
+        for (const post of this.posts) {
+            try {
+                const { absolutePath, normalizedPath } = this.resolvePostPath(post.path);
+                const markdown = await fsp.readFile(absolutePath, 'utf8');
+                posts.push({
+                    ...post,
+                    path: normalizedPath,
+                    markdown
+                });
+            } catch (error) {
+                if (error.statusCode !== 400 && error.code !== 'ENOENT') {
+                    throw error;
+                }
+            }
+        }
+        return posts;
+    }
+
+    async getPostFileRecords() {
+        const records = [];
+        for (const post of this.posts) {
+            try {
+                const { absolutePath, normalizedPath } = this.resolvePostPath(post.path);
+                const stat = await fsp.stat(absolutePath);
+                records.push({
+                    ...post,
+                    path: normalizedPath,
+                    absolutePath,
+                    size: stat.size,
+                    mtimeMs: stat.mtimeMs
+                });
+            } catch (error) {
+                if (error.statusCode !== 400 && error.code !== 'ENOENT') {
+                    throw error;
+                }
+            }
+        }
+        return records;
+    }
+
+    setAfterRefresh(callback) {
+        this.afterRefresh = typeof callback === 'function' ? callback : null;
     }
 
     getRandomPosts(count = DEFAULT_RANDOM_COUNT, seed = 'default') {

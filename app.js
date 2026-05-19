@@ -2,6 +2,8 @@ const express = require('express');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { createBlogService } = require('./blog-service');
+const { createEmbeddingService } = require('./embedding-service');
+const { VALID_TIMEFRAMES, createStore, normalizeLimit } = require('./store');
 
 const port = Number(process.env.PORT || 8787);
 const defaultSiteRoot = __dirname;
@@ -67,6 +69,14 @@ async function createApp(options = {}) {
     const siteRoot = path.resolve(options.siteRoot || defaultSiteRoot);
     const blogRoot = options.blogRoot || path.join(siteRoot, 'openblog');
     const galleryRoot = path.resolve(options.galleryRoot || path.join(siteRoot, 'images', 'gallery'));
+    const store = options.store && typeof options.store.incrementPageview === 'function'
+        ? options.store
+        : createStore(options.store || { filename: path.join(siteRoot, 'data', 'blog.db') });
+    const ownsStore = !(options.store && typeof options.store.incrementPageview === 'function');
+    const embeddingService = options.embeddingService || createEmbeddingService({
+        ...(options.embeddingServiceOptions || {}),
+        store
+    });
 
     app.use(express.json());
 
@@ -76,6 +86,35 @@ async function createApp(options = {}) {
     });
 
     app.locals.blogService = blogService;
+    app.locals.store = store;
+    app.locals.embeddingService = embeddingService;
+    app.locals.close = () => {
+        blogService.close();
+        if (ownsStore) store.close();
+    };
+
+    async function refreshEmbeddingIndex() {
+        await embeddingService.refreshFromFiles(await blogService.getPostFileRecords());
+    }
+
+    blogService.setAfterRefresh(() => refreshEmbeddingIndex());
+    await refreshEmbeddingIndex();
+
+    function postMetadata(postPath) {
+        return blogService.getPostMetadata(postPath) || {
+            title: path.posix.basename(postPath, '.md'),
+            path: postPath
+        };
+    }
+
+    function decoratePosts(rows) {
+        return rows
+            .map((row) => ({
+                ...postMetadata(row.path),
+                ...row
+            }))
+            .filter((post) => post.path);
+    }
 
     app.get('/api/blog/tree', (request, response) => {
         response.json(blogService.getTree());
@@ -96,10 +135,43 @@ async function createApp(options = {}) {
         response.json(blogService.getRandomPosts(count, seed));
     });
 
+    app.get('/api/blog/related', (request, response, next) => {
+        try {
+            const postPath = request.query.path;
+            const count = normalizeLimit(request.query.count || 5);
+            blogService.resolvePostPath(postPath);
+            response.json({
+                ok: true,
+                data: decoratePosts(store.findSimilar(postPath, count))
+            });
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    app.get('/api/blog/hot', (request, response, next) => {
+        try {
+            const timeframe = request.query.timeframe || 'all';
+            if (!VALID_TIMEFRAMES.has(timeframe)) {
+                throw Object.assign(new Error('Invalid timeframe'), { statusCode: 400 });
+            }
+            response.json({
+                ok: true,
+                data: decoratePosts(store.getTopPosts(request.query.count || 5, timeframe))
+            });
+        } catch (error) {
+            next(error);
+        }
+    });
+
     app.post('/api/pageview', (request, response) => {
+        const pagePath = request.body?.path || request.get('referer') || null;
+        const sessionId = request.body?.sessionId || request.get('x-session-id') || null;
+        const result = store.incrementPageview(pagePath, sessionId);
         response.json({
             ok: true,
-            path: request.body?.path || request.get('referer') || null,
+            path: pagePath,
+            inserted: result.inserted,
             recordedAt: new Date().toISOString()
         });
     });

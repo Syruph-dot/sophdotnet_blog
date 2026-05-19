@@ -90,3 +90,25 @@ test('returns stable seeded random article metadata', async (t) => {
     assert.ok(first.every((post) => post.title && post.path.endsWith('.md')));
     assert.ok(first.some((post) => post.title === 'Intro Title' || post.title === 'Second' || post.title === 'Third'));
 });
+
+test('refresh reuses cached titles for unchanged markdown files', async (t) => {
+    const { root, blogRoot } = await makeFixture();
+    t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+    let readCount = 0;
+    const service = await createBlogService({
+        blogRoot,
+        watch: false,
+        readFile: async (...args) => {
+            readCount += 1;
+            return fs.readFile(...args);
+        }
+    });
+    t.after(() => service.close());
+
+    assert.equal(readCount, 2);
+
+    await service.refresh();
+
+    assert.equal(readCount, 2);
+});

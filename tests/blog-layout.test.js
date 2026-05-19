@@ -17,6 +17,10 @@ test('blog page uses full-width reader layout with drawer navigation and recomme
     assert.match(blogHtml, /\.blog-tree-panel\s*\{[\s\S]*position:\s*fixed/);
     assert.match(blogHtml, /\.mobile-tree-button\s*\{[\s\S]*display:\s*inline-flex/);
     assert.equal((blogHtml.match(/id="random-list"/g) || []).length, 1);
+    assert.equal((blogHtml.match(/id="related-list"/g) || []).length, 1);
+    assert.equal((blogHtml.match(/id="hot-list"/g) || []).length, 1);
+    assert.match(blogHtml, /loadRelatedPosts\(post\.path\)/);
+    assert.match(blogHtml, /loadHotPosts\(\)/);
     assert.equal((blogHtml.match(/id="tree-backdrop"/g) || []).length, 1);
     assert.equal((blogHtml.match(/const state = /g) || []).length, 1);
 });

@@ -559,11 +559,15 @@
                             </section>
                             <section class="blog-side-section">
                                 <div class="blog-side-section-title">相关推荐</div>
-                                <div class="empty-side"></div>
+                                <div class="recommendation-list" id="related-list">
+                                    <div class="empty-side">正在加载相关推荐...</div>
+                                </div>
                             </section>
                             <section class="blog-side-section">
                                 <div class="blog-side-section-title">热度文章</div>
-                                <div class="empty-side"></div>
+                                <div class="recommendation-list" id="hot-list">
+                                    <div class="empty-side">正在加载热度文章...</div>
+                                </div>
                             </section>
                         </aside>
                     </div>
@@ -592,6 +596,8 @@
             breadcrumbs: document.getElementById('breadcrumbs'),
             body: document.getElementById('markdown-body'),
             randomList: document.getElementById('random-list'),
+            relatedList: document.getElementById('related-list'),
+            hotList: document.getElementById('hot-list'),
             openTree: document.getElementById('open-tree'),
             closeTree: document.getElementById('close-tree'),
             backdrop: document.getElementById('tree-backdrop')
@@ -633,7 +639,8 @@
             try {
                 const [tree] = await Promise.all([
                     fetchJson('/api/blog/tree'),
-                    loadRecommendations()
+                    loadRecommendations(),
+                    loadHotPosts()
                 ]);
                 state.tree = tree;
                 expandInitialDirectories(tree);
@@ -654,27 +661,60 @@
         async function loadRecommendations() {
             try {
                 const posts = await fetchJson('/api/blog/random?count=5&seed=' + encodeURIComponent(state.sessionSeed));
-                if (!posts.length) {
-                    elements.randomList.innerHTML = '<div class="empty-side">暂无推荐文章</div>';
-                    return;
-                }
-
-                elements.randomList.innerHTML = '';
-                for (const post of posts) {
-                    const link = document.createElement('a');
-                    link.className = 'recommendation-item';
-                    link.href = '?path=' + encodeURIComponent(post.path);
-                    link.innerHTML = '<span class="recommendation-title"></span><span class="recommendation-path"></span>';
-                    link.querySelector('.recommendation-title').textContent = post.title;
-                    link.querySelector('.recommendation-path').textContent = post.path;
-                    link.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        loadPost(post.path, { pushState: true });
-                    });
-                    elements.randomList.appendChild(link);
-                }
+                renderPostList(elements.randomList, posts, '暂无推荐文章');
             } catch (error) {
                 elements.randomList.innerHTML = '<div class="empty-side blog-error">推荐加载失败</div>';
+            }
+        }
+
+        async function loadRelatedPosts(path) {
+            if (!path) {
+                elements.relatedList.innerHTML = '<div class="empty-side">暂无相关推荐</div>';
+                return;
+            }
+
+            elements.relatedList.innerHTML = '<div class="empty-side">正在加载相关推荐...</div>';
+            try {
+                const result = await fetchJson('/api/blog/related?count=5&path=' + encodeURIComponent(path));
+                renderPostList(elements.relatedList, result.data || [], '暂无相关推荐', function (post) {
+                    return post.similarity ? '相似度 ' + Math.round(post.similarity * 100) + '%' : post.path;
+                });
+            } catch (error) {
+                elements.relatedList.innerHTML = '<div class="empty-side blog-error">相关推荐加载失败</div>';
+            }
+        }
+
+        async function loadHotPosts() {
+            try {
+                const result = await fetchJson('/api/blog/hot?timeframe=all&count=5');
+                renderPostList(elements.hotList, result.data || [], '暂无热度文章', function (post) {
+                    return String(post.views || 0) + ' 次阅读';
+                });
+            } catch (error) {
+                elements.hotList.innerHTML = '<div class="empty-side blog-error">热度文章加载失败</div>';
+            }
+        }
+
+        function renderPostList(container, posts, emptyText, metaFormatter) {
+            if (!posts.length) {
+                container.innerHTML = '<div class="empty-side"></div>';
+                container.querySelector('.empty-side').textContent = emptyText;
+                return;
+            }
+
+            container.innerHTML = '';
+            for (const post of posts) {
+                const link = document.createElement('a');
+                link.className = 'recommendation-item';
+                link.href = '?path=' + encodeURIComponent(post.path);
+                link.innerHTML = '<span class="recommendation-title"></span><span class="recommendation-path"></span>';
+                link.querySelector('.recommendation-title').textContent = post.title;
+                link.querySelector('.recommendation-path').textContent = metaFormatter ? metaFormatter(post) : post.path;
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    loadPost(post.path, { pushState: true });
+                });
+                container.appendChild(link);
             }
         }
 
@@ -772,6 +812,8 @@
                 elements.title.textContent = post.title;
                 renderBreadcrumbs(post.breadcrumbs);
                 elements.body.innerHTML = post.html;
+                loadRelatedPosts(post.path);
+                recordPageView(post.path);
                 if (options && options.pushState) {
                     const nextUrl = new URL(window.location.href);
                     nextUrl.searchParams.set('path', post.path);
@@ -833,11 +875,15 @@
             }
         });
 
-        function recordPageView() {
+        function recordPageView(path) {
+            if (!path) return;
             fetch('/api/pageview', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path: window.location.pathname })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': state.sessionSeed
+                },
+                body: JSON.stringify({ path: path, sessionId: state.sessionSeed })
             }).catch(function () {});
         }
 
