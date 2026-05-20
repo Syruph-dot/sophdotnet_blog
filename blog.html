@@ -515,6 +515,7 @@
 
     <!-- Mermaid 图渲染 -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .markdown-body .mermaid {
             text-align: center;
@@ -530,6 +531,103 @@
         }
         .theme-a .markdown-body .mermaid {
             background: #1e1e2e;
+        }
+
+        /* ===== 文章分析区域 ===== */
+        .analysis-section {
+            border-top: 2px solid var(--blog-border);
+            margin-top: 8px;
+        }
+        .analysis-content {
+            padding: 12px;
+        }
+        .analysis-metrics {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .analysis-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border: 1px solid var(--blog-border);
+            border-radius: 6px;
+            background: var(--blog-panel);
+        }
+        .analysis-card .label {
+            font-size: 0.78em;
+            color: var(--blog-muted);
+            min-width: 85px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+        .analysis-card .value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--blog-text);
+            min-width: 60px;
+        }
+        .analysis-card .sub {
+            font-size: 0.72em;
+            color: var(--blog-muted);
+            margin-left: auto;
+            text-align: right;
+        }
+        .analysis-card .sub .z-h { color: #2e86ab; }
+        .analysis-card .sub .z-a { color: #ca562c; }
+        .analysis-chart-box {
+            border: 1px solid var(--blog-border);
+            border-radius: 6px;
+            padding: 12px;
+            background: var(--blog-panel);
+            margin-bottom: 10px;
+        }
+        .analysis-chart-box h4 {
+            font-size: 0.82em;
+            color: var(--blog-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .analysis-chart-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .analysis-chart-box svg {
+            display: block;
+            width: 100%;
+        }
+        .analysis-chart-box text {
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .analysis-chart-full {
+            grid-column: 1 / -1;
+        }
+        .analysis-empty {
+            color: var(--blog-muted);
+            font-size: 0.85em;
+            padding: 20px;
+            text-align: center;
+        }
+        .analysis-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+        }
+        .analysis-tooltip.show { opacity: 1; }
+        @media (max-width: 700px) {
+            .analysis-card { flex-wrap: wrap; gap: 4px 10px; }
+            .analysis-card .sub { margin-left: 0; text-align: left; width: 100%; }
+            .analysis-chart-row-3 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -590,6 +688,39 @@
                                 </div>
                             </section>
                         </aside>
+
+                        <section class="blog-side-section analysis-section">
+                            <div class="blog-side-section-title">文章分析</div>
+                            <div class="analysis-content" id="analysisContent">
+                                <div class="analysis-metrics" id="analysisMetrics">
+                                    <div class="analysis-empty" id="analysisLoading">文章加载后将自动分析</div>
+                                </div>
+                                <div id="analysisCharts" style="display:none">
+                                    <div class="analysis-chart-box analysis-chart-full">
+                                        <h4>① 熵曲线 — 滑窗局部熵 vs 参考档案</h4>
+                                        <div id="blogEntropyChart" style="position:relative"></div>
+                                    </div>
+                                    <div class="analysis-chart-row-3">
+                                        <div class="analysis-chart-box">
+                                            <h4>② 压缩比曲线</h4>
+                                            <div id="blogCompCurve" style="position:relative"></div>
+                                        </div>
+                                        <div class="analysis-chart-box">
+                                            <h4>③ 标点率曲线</h4>
+                                            <div id="blogPuncCurve" style="position:relative"></div>
+                                        </div>
+                                        <div class="analysis-chart-box">
+                                            <h4>④ 独特字符比曲线</h4>
+                                            <div id="blogUniqCurve" style="position:relative"></div>
+                                        </div>
+                                    </div>
+                                    <div class="analysis-chart-box analysis-chart-full">
+                                        <h4>⑤ 特征雷达 — 6 维标准化对比</h4>
+                                        <div id="blogRadarChart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </section>
@@ -602,6 +733,7 @@
         </div>
     </div>
 
+    <script src="js/blog-analyzer.js"></script>
     <script>
         const state = {
             tree: null,
@@ -833,6 +965,7 @@
                 renderBreadcrumbs(post.breadcrumbs);
                 elements.body.innerHTML = post.html;
                 renderMermaid();
+                analyzeArticle(post.html);
                 loadRelatedPosts(post.path);
                 recordPageView(post.path);
                 if (options && options.pushState) {
