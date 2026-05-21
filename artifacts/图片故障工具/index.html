@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Sort Glitch Studio</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;color:#eee;font-family:system-ui,sans-serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center}
+h1{margin:20px 0;font-size:1.4rem;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:#888}
+#dropZone{width:clamp(300px,90vw,900px);height:clamp(200px,50vh,500px);border:2px dashed #333;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:.3s;position:relative;overflow:hidden}
+#dropZone.dragover{border-color:#6af;background:#1a1a2e}
+#dropZone.hasImage{border-color:#444;cursor:default}
+#dropZone img,#dropZone canvas{max-width:100%;max-height:100%;object-fit:contain}
+.placeholder{color:#555;font-size:.9rem;text-align:center}
+.placeholder span{font-size:2.5rem;display:block;margin-bottom:8px}
+input[type="file"]{display:none}
+.controls{width:clamp(300px,90vw,900px);padding:16px 0;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.controls label{font-size:.8rem;color:#888}
+.controls input[type="range"]{flex:1;min-width:100px;accent-color:#6af}
+.controls input[type="number"]{width:60px;background:#222;border:1px solid #444;color:#eee;padding:4px 8px;border-radius:4px;font-size:.8rem}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+button{padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;transition:.2s}
+.btn-apply{background:#6af;color:#111;font-weight:600}
+.btn-apply:hover{background:#8cf}
+.btn-reset{background:#333;color:#aaa}
+.btn-reset:hover{background:#444}
+.btn-download{background:#4a4;color:#111;font-weight:600}
+.btn-download:hover{background:#6c6}
+.btn-random{background:#a6f;color:#111;font-weight:600}
+.btn-random:hover{background:#c8f}
+.btn-preset{background:#fa4;color:#111;font-size:.7rem}
+.btn-preset:hover{background:#fc6}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.mode-select{display:flex;gap:4px}
+.mode-select button{background:#222;color:#888;border:1px solid #444;padding:6px 14px;font-size:.75rem}
+.mode-select button.active{background:#6af;color:#111;border-color:#6af;font-weight:600}
+.info{color:#555;font-size:.75rem;padding-bottom:30px;text-align:center}
+canvas{display:none}
+</style>
+</head>
+<body>
+
+<h1>⸺ Pixel Sort Glitch Studio ⸺</h1>
+
+<div id="dropZone">
+  <div class="placeholder" id="placeholder">
+    <span>⊞</span>
+    Drop image here<br><span style="font-size:.75rem;color:#444">or click to browse</span>
+  </div>
+  <img id="preview" style="display:none">
+</div>
+
+<div class="controls" id="controls" style="display:none">
+  <div class="mode-select">
+    <button data-mode="horizontal" class="active">Horizontal</button>
+    <button data-mode="vertical">Vertical</button>
+    <button data-mode="both">Both</button>
+  </div>
+  <label>Threshold <input type="range" id="threshold" min="0" max="255" value="128"><span id="thresholdVal">128</span></label>
+  <label>RGB Shift <input type="range" id="rgbShift" min="0" max="50" value="8"><span id="rgbShiftVal">8</span></label>
+  <label>Sort Angle <input type="range" id="angle" min="-45" max="45" value="0">°</label>
+</div>
+
+<div class="controls" id="actionControls" style="display:none">
+  <div class="btn-group">
+    <button class="btn-apply" id="applyBtn">⟳ Apply</button>
+    <button class="btn-reset" id="resetBtn">↺ Reset</button>
+    <button class="btn-download" id="downloadBtn">⇩ Download PNG</button>
+    <button class="btn-random" id="randomBtn">🎲 Randomize</button>
+  </div>
+  <div class="presets">
+    <button class="btn-preset" data-preset="glitch1">Glitch 1</button>
+    <button class="btn-preset" data-preset="glitch2">Glitch 2</button>
+    <button class="btn-preset" data-preset="glitch3">Glitch 3</button>
+    <button class="btn-preset" data-preset="vapor">Vaporwave</button>
+    <button class="btn-preset" data-preset="ghost">Ghost</button>
+  </div>
+</div>
+
+<canvas id="buffer"></canvas>
+<div class="info" id="info">Drop an image to begin</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const placeholder = document.getElementById('placeholder');
+const preview = document.getElementById('preview');
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'image/*';
+const buffer = document.getElementById('buffer');
+const ctx = buffer.getContext('2d');
+const controls = document.getElementById('controls');
+const actionControls = document.getElementById('actionControls');
+const info = document.getElementById('info');
+
+let originalData = null;
+let currentData = null;
+let imgWidth = 0, imgHeight = 0;
+
+// Mode buttons
+let sortMode = 'horizontal';
+document.querySelectorAll('.mode-select button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-select button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sortMode = btn.dataset.mode;
+  });
+});
+
+// Range displays
+['threshold','rgbShift','angle'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const display = document.getElementById(id + 'Val');
+    if (display) display.textContent = el.value;
+  });
+});
+
+// Image loading
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); loadFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      imgWidth = img.naturalWidth;
+      imgHeight = img.naturalHeight;
+      const maxDim = 1200;
+      let scale = 1;
+      if (imgWidth > maxDim || imgHeight > maxDim) scale = maxDim / Math.max(imgWidth, imgHeight);
+      buffer.width = Math.round(imgWidth * scale);
+      buffer.height = Math.round(imgHeight * scale);
+      ctx.drawImage(img, 0, 0, buffer.width, buffer.height);
+      const imageData = ctx.getImageData(0, 0, buffer.width, buffer.height);
+      originalData = new Uint8ClampedArray(imageData.data);
+      currentData = new Uint8ClampedArray(originalData);
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      dropZone.classList.add('hasImage');
+      controls.style.display = 'flex';
+      actionControls.style.display = 'flex';
+      info.textContent = `${buffer.width}×${buffer.height} · ${file.name}`;
+      updatePreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Pixel sort functions
+function brightness(r, g, b) { return 0.299*r + 0.587*g + 0.114*b; }
+
+function pixelSortRow(data, w, y, thresh, angle) {
+  const row = [];
+  const cx = w/2, cy = y;
+  for (let x = 0; x < w; x++) {
+    const idx = (y * w + x) * 4;
+    let sx = x;
+    if (angle !== 0) {
+      const dx = x - cx;
+      const rad = angle * Math.PI / 180;
+      sx = Math.round(x + Math.tan(rad) * (y - cy));
+      sx = Math.max(0, Math.min(w-1, sx));
+    }
+    const sidx = (y * w + sx) * 4;
+    row.push({ r: data[sidx], g: data[sidx+1], b: data[sidx+2], a: data[sidx+3], x: sx });
+  }
+  
+  // Sort contiguous segments where brightness > threshold
+  let result = new Array(w).fill(null);
+  let i = 0;
+  while (i < w) {
+    if (brightness(row[i].r, row[i].g, row[i].b) > thresh) {
+      let seg = [];
+      while (i < w && brightness(row[i].r, row[i].g, row[i].b) > thresh) {
+        seg.push(row[i]);
+        i++;
+      }
+      seg.sort((a,b) => brightness(a.r,a.g,a.b) - brightness(b.r,b.g,b.b));
+      seg.forEach((p, j) => { result[i-seg.length+j] = p; });
+    } else {
+      result[i] = row[i];
+      i++;
+    }
+  }
+  
+  for (let x = 0; x < w; x++) {
+    if (result[x]) {
+      const idx = (y * w + x) * 4;
+      data[idx] = result[x].r;
+      data[idx+1] = result[x].g;
+      data[idx+2] = result[x].b;
+      data[idx+3] = result[x].a;
+    }
+  }
+}
+
+function pixelSortCol(data, h, w, x, thresh) {
+  const col = [];
+  for (let y = 0; y < h; y++) {
+    const idx = (y * w + x) * 4;
+    col.push({ r: data[idx], g: data[idx+1], b: data[idx+2], a: data[idx+3] });
+  }
+  let result = new Array(h).fill(null);
+  let i = 0;
+  while (i < h) {
+    if (brightness(col[i].r, col[i].g, col[i].b) > thresh) {
+      let seg = [];
+      while (i < h && brightness(col[i].r, col[i].g, col[i].b) > thresh) {
+        seg.push(col[i]);
+        i++;
+      }
+      seg.sort((a,b) => brightness(a.r,a.g,a.b) - brightness(b.r,b.g,b.b));
+      seg.forEach((p, j) => { result[i-seg.length+j] = p; });
+    } else {
+      result[i] = col[i];
+      i++;
+    }
+  }
+  for (let y = 0; y < h; y++) {
+    if (result[y]) {
+      const idx = (y * w + x) * 4;
+      data[idx] = result[y].r;
+      data[idx+1] = result[y].g;
+      data[idx+2] = result[y].b;
+      data[idx+3] = result[y].a;
+    }
+  }
+}
+
+function applyRGBShift(data, w, h, shift) {
+  if (shift === 0) return;
+  const output = new Uint8ClampedArray(data);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      const rx = Math.min(w-1, Math.max(0, x - shift));
+      const bx = Math.min(w-1, Math.max(0, x + shift));
+      const ridx = (y * w + rx) * 4;
+      const bidx = (y * w + bx) * 4;
+      data[idx] = output[ridx];
+      data[idx+2] = output[bidx];
+    }
+  }
+}
+
+function process() {
+  if (!originalData) return;
+  currentData = new Uint8ClampedArray(originalData);
+  const thresh = parseInt(document.getElementById('threshold').value);
+  const angle = parseInt(document.getElementById('angle').value);
+  const w = buffer.width, h = buffer.height;
+  
+  if (sortMode === 'horizontal' || sortMode === 'both') {
+    for (let y = 0; y < h; y++) pixelSortRow(currentData, w, y, thresh, angle);
+  }
+  if (sortMode === 'vertical' || sortMode === 'both') {
+    for (let x = 0; x < w; x++) pixelSortCol(currentData, h, w, x, thresh);
+  }
+  
+  const shift = parseInt(document.getElementById('rgbShift').value);
+  applyRGBShift(currentData, w, h, shift);
+  
+  updatePreview();
+}
+
+function updatePreview() {
+  if (!currentData) return;
+  const imageData = new ImageData(new Uint8ClampedArray(currentData), buffer.width, buffer.height);
+  ctx.putImageData(imageData, 0, 0);
+  preview.src = buffer.toDataURL();
+}
+
+// Presets
+const presets = {
+  glitch1: { threshold: 80, rgbShift: 15, angle: 2, mode: 'horizontal' },
+  glitch2: { threshold: 180, rgbShift: 25, angle: -3, mode: 'vertical' },
+  glitch3: { threshold: 60, rgbShift: 30, angle: 5, mode: 'both' },
+  vapor: { threshold: 140, rgbShift: 20, angle: 0, mode: 'horizontal' },
+  ghost: { threshold: 200, rgbShift: 10, angle: 0, mode: 'both' },
+};
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = presets[btn.dataset.preset];
+    if (!p) return;
+    document.getElementById('threshold').value = p.threshold;
+    document.getElementById('thresholdVal').textContent = p.threshold;
+    document.getElementById('rgbShift').value = p.rgbShift;
+    document.getElementById('rgbShiftVal').textContent = p.rgbShift;
+    document.getElementById('angle').value = p.angle;
+    document.querySelectorAll('.mode-select button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.mode-select button[data-mode="${p.mode}"]`).classList.add('active');
+    sortMode = p.mode;
+    process();
+  });
+});
+
+document.getElementById('applyBtn').addEventListener('click', process);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!originalData) return;
+  currentData = new Uint8ClampedArray(originalData);
+  updatePreview();
+});
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (!currentData) return;
+  const a = document.createElement('a');
+  a.download = 'glitch-output.png';
+  a.href = buffer.toDataURL('image/png');
+  a.click();
+});
+document.getElementById('randomBtn').addEventListener('click', () => {
+  document.getElementById('threshold').value = Math.floor(Math.random() * 256);
+  document.getElementById('thresholdVal').textContent = document.getElementById('threshold').value;
+  document.getElementById('rgbShift').value = Math.floor(Math.random() * 40) + 2;
+  document.getElementById('rgbShiftVal').textContent = document.getElementById('rgbShift').value;
+  document.getElementById('angle').value = Math.floor(Math.random() * 60) - 30;
+  const modes = ['horizontal','vertical','both'];
+  const mode = modes[Math.floor(Math.random() * 3)];
+  document.querySelectorAll('.mode-select button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.mode-select button[data-mode="${mode}"]`).classList.add('active');
+  sortMode = mode;
+  process();
+});
+</script>
+</body>
+</html>
