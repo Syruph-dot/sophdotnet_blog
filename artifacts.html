@@ -165,13 +165,21 @@
             const grid = document.getElementById('artifactsGrid');
             let artifacts;
 
-            try {
-                const response = await fetch('/api/artifacts');
+            async function fetchArtifacts(url) {
+                const response = await fetch(url);
                 if (!response.ok) throw new Error('HTTP ' + response.status);
-                artifacts = await response.json();
-            } catch (error) {
-                grid.innerHTML = '<div class="artifacts-empty">加载失败，请刷新重试</div>';
-                return;
+                return response.json();
+            }
+
+            try {
+                artifacts = await fetchArtifacts('/api/artifacts');
+            } catch (apiError) {
+                try {
+                    artifacts = await fetchArtifacts('/data/artifacts.json');
+                } catch (manifestError) {
+                    grid.innerHTML = '<div class="artifacts-empty">加载失败，请刷新重试</div>';
+                    return;
+                }
             }
 
             if (!artifacts || artifacts.length === 0) {

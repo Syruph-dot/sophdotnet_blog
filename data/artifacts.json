@@ -1,0 +1,17 @@
+[
+  {
+    "name": "粒子01",
+    "description": "交互式 Canvas 物理模拟器 — 点击生成粒子，观察它们在引力、碰撞和网络连线下的舞蹈。",
+    "path": "artifacts/粒子01/"
+  },
+  {
+    "name": "图案涌现",
+    "description": "A real-time interactive Gray-Scott reaction-diffusion simulation rendered in the browser.",
+    "path": "artifacts/图案涌现/"
+  },
+  {
+    "name": "字符画相机",
+    "description": "实时将摄像头画面转换为 ASCII 字符画的网页工具。",
+    "path": "artifacts/字符画相机/"
+  }
+]

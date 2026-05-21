@@ -108,6 +108,46 @@ async function scanGalleryDirectory(directory, relativeSegments = []) {
     return { files, folders };
 }
 
+async function scanArtifacts(siteRoot = defaultSiteRoot) {
+    const artifactsDir = path.join(siteRoot, 'artifacts');
+    let entries;
+    try {
+        entries = await fs.readdir(artifactsDir, { withFileTypes: true });
+    } catch (error) {
+        if (error.code === 'ENOENT') return [];
+        throw error;
+    }
+
+    const artifacts = [];
+    for (const entry of entries) {
+        if (isHiddenName(entry.name) || !entry.isDirectory()) continue;
+
+        const artifactPath = path.join(artifactsDir, entry.name);
+        let description = '';
+
+        try {
+            const readmeContent = await fs.readFile(path.join(artifactPath, 'README.md'), 'utf-8');
+            const lines = readmeContent.split('\n');
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('![') && !trimmed.startsWith('[')) {
+                    description = trimmed.substring(0, 200);
+                    break;
+                }
+            }
+        } catch { /* README may not exist */ }
+
+        artifacts.push({
+            name: entry.name,
+            description,
+            path: `artifacts/${entry.name}/`
+        });
+    }
+
+    artifacts.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+    return artifacts;
+}
+
 async function createApp(options = {}) {
     const app = express();
     const siteRoot = path.resolve(options.siteRoot || defaultSiteRoot);
@@ -228,49 +268,9 @@ async function createApp(options = {}) {
         }
     });
 
-    async function scanArtifacts() {
-        const artifactsDir = path.join(siteRoot, 'artifacts');
-        let entries;
-        try {
-            entries = await fs.readdir(artifactsDir, { withFileTypes: true });
-        } catch (error) {
-            if (error.code === 'ENOENT') return [];
-            throw error;
-        }
-
-        const artifacts = [];
-        for (const entry of entries) {
-            if (isHiddenName(entry.name) || !entry.isDirectory()) continue;
-
-            const artifactPath = path.join(artifactsDir, entry.name);
-            let description = '';
-
-            try {
-                const readmeContent = await fs.readFile(path.join(artifactPath, 'README.md'), 'utf-8');
-                const lines = readmeContent.split('\n');
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('![') && !trimmed.startsWith('[')) {
-                        description = trimmed.substring(0, 200);
-                        break;
-                    }
-                }
-            } catch { /* README may not exist */ }
-
-            artifacts.push({
-                name: entry.name,
-                description,
-                path: `artifacts/${entry.name}/`
-            });
-        }
-
-        artifacts.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
-        return artifacts;
-    }
-
     app.get('/api/artifacts', async (request, response, next) => {
         try {
-            response.json(await scanArtifacts());
+            response.json(await scanArtifacts(siteRoot));
         } catch (error) {
             next(error);
         }
@@ -328,5 +328,6 @@ if (require.main === module) {
 module.exports = {
     createApp,
     requestPoemistRuntime,
+    scanArtifacts,
     scanGalleryDirectory
 };

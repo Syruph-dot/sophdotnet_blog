@@ -4,6 +4,7 @@ node_modules/
 dist/
 .superpowers/
 data/*
+!data/artifacts.json
 !data/poemist/
 !data/poemist/*.poemist
 .tmp/
