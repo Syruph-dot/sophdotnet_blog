@@ -91,7 +91,6 @@
         <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
         <a href="https://space.bilibili.com/650205035" target="_blank">站长主页</a>
         <a href="https://space.bilibili.com/627376584" target="_blank">站长经典老号</a>
-        /*No more links*/
     </div>
 </div>`;
 
