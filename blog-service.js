@@ -85,7 +85,7 @@ function createMarkdownRenderer(basePath = '') {
 
     return {
         async: false,
-        breaks: false,
+        breaks: true,
         gfm: true,
         renderer
     };

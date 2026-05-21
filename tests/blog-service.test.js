@@ -58,6 +58,20 @@ test('renders markdown with title, breadcrumbs, and highlighted code', async (t)
     assert.match(post.html, /hljs/);
 });
 
+test('renders single markdown line breaks as visible breaks', async (t) => {
+    const { root, blogRoot } = await makeFixture();
+    t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+    await fs.writeFile(path.join(blogRoot, 'Series', 'Line Breaks.md'), '# Line Breaks\n\nfirst line\nsecond line', 'utf8');
+
+    const service = await createBlogService({ blogRoot, watch: false });
+    t.after(() => service.close());
+
+    const post = await service.readPost('Series/Line Breaks.md');
+
+    assert.match(post.html, /first line<br>[\s\n]*second line/);
+});
+
 test('falls back to filename title and rejects unsafe or non-markdown paths', async (t) => {
     const { root, blogRoot } = await makeFixture();
     t.after(() => fs.rm(root, { recursive: true, force: true }));
