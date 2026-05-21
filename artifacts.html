@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杂物间 · Artifacts - Soph Dot Net</title>
+    <link rel="icon" id="favicon" href="icon01.png" type="image/png">
+    <link rel="stylesheet" href="css/mobile-framework.css?v=20260518-scrollbar-hide">
+    <link rel="stylesheet" href="css/ggmetro.css?v=20260518-scrollbar-hide">
+    <script src="js/shared-header.js?v=20260518-shared-header" defer></script>
+    <style>
+        .artifacts-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .artifacts-header {
+            padding: 28px 24px 20px;
+            text-align: center;
+        }
+
+        .artifacts-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .artifacts-header p {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 0 24px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .artifact-card {
+            border-radius: 10px;
+            padding: 20px 16px;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            min-height: 110px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artifact-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, transparent, rgba(255,255,255,0.7));
+            pointer-events: none;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .artifact-card:active {
+            transform: translateY(0);
+        }
+
+        .artifact-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .artifact-card-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .artifact-card-desc:empty {
+            display: none;
+        }
+
+        .artifact-card-arrow {
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .artifacts-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #bbb;
+            font-size: 14px;
+        }
+
+        .theme-a .artifacts-header h1 { color: #eee; }
+        .theme-a .artifacts-header p { color: #888; }
+        .theme-a .artifact-card-title { color: #eee; }
+        .theme-a .artifact-card-desc { color: #ccc; }
+        .theme-a .artifact-card-arrow { color: #aaa; }
+        .theme-a .artifact-card { background: #2a2a2a !important; }
+        .theme-a .artifact-card::after {
+            background: linear-gradient(to bottom right, transparent, rgba(50,50,50,0.5));
+        }
+
+        @media (max-width: 768px) {
+            .artifacts-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 0 16px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .artifacts-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 0 12px 24px;
+            }
+            .artifacts-header {
+                padding: 20px 16px 16px;
+            }
+            .artifacts-header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="theme-c">
+    <div class="artifacts-page">
+        <div id="topbar-placeholder"></div>
+        <div class="artifacts-header">
+            <h1>杂物间</h1>
+            <p>零散的小玩意、实验品与练手作</p>
+        </div>
+        <div class="artifacts-grid" id="artifactsGrid">
+            <div class="artifacts-empty">加载中…</div>
+        </div>
+    </div>
+
+    <script>
+        (async function () {
+            const grid = document.getElementById('artifactsGrid');
+            let artifacts;
+
+            try {
+                const response = await fetch('/api/artifacts');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                artifacts = await response.json();
+            } catch (error) {
+                grid.innerHTML = '<div class="artifacts-empty">加载失败，请刷新重试</div>';
+                return;
+            }
+
+            if (!artifacts || artifacts.length === 0) {
+                grid.innerHTML = '<div class="artifacts-empty">杂物间空空如也</div>';
+                return;
+            }
+
+            function randomHsl() {
+                const hue = Math.floor(Math.random() * 360);
+                const sat = 35 + Math.floor(Math.random() * 25);
+                const lig = 78 + Math.floor(Math.random() * 12);
+                return { hue, sat, lig };
+            }
+
+            grid.innerHTML = '';
+            for (const item of artifacts) {
+                const { hue, sat, lig } = randomHsl();
+                const bgColor = `hsl(${hue}, ${sat}%, ${lig}%)`;
+
+                const card = document.createElement('a');
+                card.className = 'artifact-card';
+                card.href = item.path;
+                card.style.background = bgColor;
+
+                const title = document.createElement('div');
+                title.className = 'artifact-card-title';
+                title.textContent = item.name;
+
+                const desc = document.createElement('div');
+                desc.className = 'artifact-card-desc';
+                desc.textContent = item.description;
+
+                const arrow = document.createElement('div');
+                arrow.className = 'artifact-card-arrow';
+                arrow.textContent = '打开 →';
+
+                card.appendChild(title);
+                if (item.description) card.appendChild(desc);
+                card.appendChild(arrow);
+                grid.appendChild(card);
+            }
+        })();
+    </script>
+</body>
+</html>
