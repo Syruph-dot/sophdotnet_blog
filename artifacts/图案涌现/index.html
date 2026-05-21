@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction-Diffusion Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    padding: 16px 24px 8px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, #a78bfa, #f472b6, #fb923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 12px 24px 24px;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  .canvas-wrap {
+    position: relative;
+    border: 2px solid #222;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+    line-height: 0;
+  }
+  canvas {
+    display: block;
+    cursor: crosshair;
+    image-rendering: pixelated;
+  }
+
+  .panel {
+    background: #111118;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 220px;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+  }
+
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  button {
+    background: #1a1a24;
+    color: #ccc;
+    border: 1px solid #333;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  button:hover {
+    background: #252535;
+    border-color: #555;
+    color: #fff;
+  }
+  button.active {
+    background: #2d1b69;
+    border-color: #8b5cf6;
+    color: #c4b5fd;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+  }
+
+  .slider-group { display: flex; flex-direction: column; gap: 6px; }
+  .slider-group label {
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+  .slider-group label span { color: #c4b5fd; font-weight: 600; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: #222;
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #8b5cf6;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .color-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .color-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .color-dot:hover, .color-dot.active { border-color: #fff; }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: #555;
+  }
+
+  footer {
+    font-size: 0.7rem;
+    color: #444;
+    padding: 0 0 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Reaction-Diffusion Lab</h1>
+  <p>Gray-Scott model — click &amp; drag to seed patterns</p>
+</header>
+
+<main>
+  <div class="canvas-wrap">
+    <canvas id="c"></canvas>
+  </div>
+
+  <div class="panel">
+    <h3>🎨 Patterns</h3>
+    <div class="preset-grid" id="presets"></div>
+
+    <h3>⚙️ Sliders</h3>
+    <div class="slider-group">
+      <label>Feed rate (f) <span id="fv">0.037</span></label>
+      <input type="range" id="f-slider" min="0.010" max="0.080" step="0.001" value="0.037">
+    </div>
+    <div class="slider-group">
+      <label>Kill rate (k) <span id="kv">0.060</span></label>
+      <input type="range" id="k-slider" min="0.030" max="0.070" step="0.001" value="0.060">
+    </div>
+    <div class="slider-group">
+      <label>Brush size <span id="bv">40</span></label>
+      <input type="range" id="brush-slider" min="8" max="80" step="1" value="40">
+    </div>
+    <div class="slider-group">
+      <label>Sim speed <span id="sv">2</span></label>
+      <input type="range" id="speed-slider" min="1" max="8" step="1" value="2">
+    </div>
+
+    <h3>🎨 Color</h3>
+    <div class="color-presets" id="colors"></div>
+
+    <div class="info-row">
+      <span id="fps">FPS: —</span>
+      <span id="step">Step: 0</span>
+    </div>
+  </div>
+</main>
+
+<footer>Gray-Scott reaction-diffusion — Turing patterns in your browser</footer>
+
+<script>
+// ── Canvas setup ──────────────────────────────────────────────
+const SIZE = 400;
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = SIZE;
+canvas.height = SIZE;
+
+// ── Gray-Scott parameters ─────────────────────────────────────
+const Da = 1.0;   // diffusion rate of A
+const Db = 0.5;   // diffusion rate of B
+let feed = 0.037; // f: feed rate
+let kill = 0.060; // k: kill rate
+let brushSize = 40;
+let simSpeed = 2;
+let steps = 0;
+
+// Laplacian 3x3 convolution kernel
+const LAP = [0.05, 0.2, 0.05, 0.2, -1.0, 0.2, 0.05, 0.2, 0.05];
+
+// ── Grids (double-buffered) ───────────────────────────────────
+const N = SIZE;
+let a0 = new Float32Array(N * N);
+let b0 = new Float32Array(N * N);
+let a1 = new Float32Array(N * N);
+let b1 = new Float32Array(N * N);
+
+// Image data for rendering
+const img = ctx.createImageData(SIZE, SIZE);
+
+// ── Initialize grid ───────────────────────────────────────────
+function resetGrid(f, k) {
+  feed = f; kill = k;
+  for (let i = 0; i < N * N; i++) {
+    a0[i] = 1.0;
+    b0[i] = 0.0;
+  }
+  // Seed center square with B
+  const cx = N >> 1;
+  const cy = N >> 1;
+  const r = 20;
+  for (let y = cy - r; y < cy + r; y++) {
+    for (let x = cx - r; x < cx + r; x++) {
+      if (x >= 0 && x < N && y >= 0 && y < N) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy < r * r) {
+          const idx = y * N + x;
+          b0[idx] = 1.0;
+          a0[idx] = 0.0;
+        }
+      }
+    }
+  }
+  // Add noise
+  for (let i = 0; i < N * N; i++) {
+    a0[i] += (Math.random() - 0.5) * 0.02;
+    b0[i] += (Math.random() - 0.5) * 0.02;
+    a0[i] = Math.max(0, Math.min(1, a0[i]));
+    b0[i] = Math.max(0, Math.min(1, b0[i]));
+  }
+  steps = 0;
+}
+
+// ── Laplacian ─────────────────────────────────────────────────
+function laplacian(grid, x, y) {
+  let sum = 0;
+  for (let j = -1; j <= 1; j++) {
+    const ny = ((y + j + N) % N) * N;
+    for (let i = -1; i <= 1; i++) {
+      const nx = (x + i + N) % N;
+      sum += LAP[(j + 1) * 3 + (i + 1)] * grid[ny + nx];
+    }
+  }
+  return sum;
+}
+
+// ── Update step ───────────────────────────────────────────────
+function step() {
+  for (let y = 0; y < N; y++) {
+    const row = y * N;
+    for (let x = 0; x < N; x++) {
+      const idx = row + x;
+      const A = a0[idx];
+      const B = b0[idx];
+
+      const lapA = laplacian(a0, x, y);
+      const lapB = laplacian(b0, x, y);
+
+      const abb = A * B * B;
+      const newA = A + (Da * lapA - abb + feed * (1 - A));
+      const newB = B + (Db * lapB + abb - (feed + kill) * B);
+
+      a1[idx] = Math.max(0, Math.min(1, newA));
+      b1[idx] = Math.max(0, Math.min(1, newB));
+    }
+  }
+  // Swap buffers
+  [a0, a1] = [a1, a0];
+  [b0, b1] = [b1, b0];
+  steps++;
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  const d = img.data;
+  for (let i = 0; i < N * N; i++) {
+    const A = a0[i];
+    const B = b0[i];
+    // Use B concentration for the pattern visibility
+    const v = B;
+    // Map to color trio
+    const r = Math.min(255, v * colorTriple[0] * 255);
+    const g = Math.min(255, v * colorTriple[1] * 255);
+    const b = Math.min(255, v * colorTriple[2] * 255);
+    const px = i * 4;
+    d[px]     = r;
+    d[px + 1] = g;
+    d[px + 2] = b;
+    d[px + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// ── Paint on grid ─────────────────────────────────────────────
+function paint(cx, cy) {
+  const r = brushSize;
+  for (let y = cy - r; y <= cy + r; y++) {
+    for (let x = cx - r; x <= cx + r; x++) {
+      if (x < 0 || x >= N || y < 0 || y >= N) continue;
+      const dx = x - cx, dy = y - cy;
+      if (dx * dx + dy * dy > r * r) continue;
+      const idx = y * N + x;
+      // Seed B with random variation
+      const dist = Math.sqrt(dx * dx + dy * dy) / r;
+      const strength = 1.0 - dist;
+      b0[idx] = Math.min(1, b0[idx] + strength * 0.8 + Math.random() * 0.2);
+      a0[idx] = Math.max(0, a0[idx] - strength * 0.6);
+    }
+  }
+}
+
+// ── Color schemes ─────────────────────────────────────────────
+const colorSchemes = [
+  { name: 'Neon',   rgb: [0.8, 0.4, 2.0] },
+  { name: 'Coral',  rgb: [2.0, 0.7, 0.4] },
+  { name: 'Ice',    rgb: [0.5, 1.0, 2.0] },
+  { name: 'Ember',  rgb: [2.0, 1.0, 0.3] },
+  { name: 'Mint',   rgb: [0.4, 2.0, 1.2] },
+  { name: 'Inferno',rgb: [2.0, 0.3, 0.0] },
+  { name: 'Plasma', rgb: [1.5, 0.2, 1.8] },
+  { name: 'Ocean',  rgb: [0.1, 0.6, 2.0] },
+];
+let colorTriple = colorSchemes[0].rgb;
+
+function buildColorsUI() {
+  const container = document.getElementById('colors');
+  colorSchemes.forEach((cs, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'color-dot' + (i === 0 ? ' active' : '');
+    const [r, g, b] = cs.rgb.map(v => Math.min(255, Math.round(v * 128)));
+    dot.style.background = `radial-gradient(circle, rgb(${r},${g},${b}), #111)`;
+    dot.title = cs.name;
+    dot.addEventListener('click', () => {
+      container.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+      colorTriple = cs.rgb;
+    });
+    container.appendChild(dot);
+  });
+}
+
+// ── Presets ───────────────────────────────────────────────────
+const presets = [
+  { name: 'Spots',    f: 0.037, k: 0.060 },
+  { name: 'Stripes',  f: 0.030, k: 0.058 },
+  { name: 'Worms',    f: 0.078, k: 0.061 },
+  { name: 'Maze',     f: 0.030, k: 0.062 },
+  { name: 'Bubbles',  f: 0.040, k: 0.064 },
+  { name: 'Waves',    f: 0.014, k: 0.054 },
+  { name: 'Chaos',    f: 0.026, k: 0.053 },
+  { name: 'Crystals', f: 0.035, k: 0.065 },
+];
+
+function buildPresetsUI() {
+  const container = document.getElementById('presets');
+  presets.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = p.name;
+    if (i === 0) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('f-slider').value = p.f;
+      document.getElementById('k-slider').value = p.k;
+      document.getElementById('fv').textContent = p.f.toFixed(3);
+      document.getElementById('kv').textContent = p.k.toFixed(3);
+      resetGrid(p.f, p.k);
+    });
+    container.appendChild(btn);
+  });
+}
+
+// ── Slider bindings ───────────────────────────────────────────
+document.getElementById('f-slider').addEventListener('input', function() {
+  feed = parseFloat(this.value);
+  document.getElementById('fv').textContent = feed.toFixed(3);
+});
+document.getElementById('k-slider').addEventListener('input', function() {
+  kill = parseFloat(this.value);
+  document.getElementById('kv').textContent = kill.toFixed(3);
+});
+document.getElementById('brush-slider').addEventListener('input', function() {
+  brushSize = parseInt(this.value);
+  document.getElementById('bv').textContent = brushSize;
+});
+document.getElementById('speed-slider').addEventListener('input', function() {
+  simSpeed = parseInt(this.value);
+  document.getElementById('sv').textContent = simSpeed;
+});
+
+// ── Mouse / Touch interaction ────────────────────────────────
+let mouseDown = false;
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = SIZE / rect.width;
+  const scaleY = SIZE / rect.height;
+  return {
+    x: Math.floor((e.clientX - rect.left) * scaleX),
+    y: Math.floor((e.clientY - rect.top) * scaleY),
+  };
+}
+
+canvas.addEventListener('mousedown', e => { mouseDown = true; const p = getPos(e); paint(p.x, p.y); });
+canvas.addEventListener('mousemove', e => { if (mouseDown) { const p = getPos(e); paint(p.x, p.y); } });
+canvas.addEventListener('mouseup', () => { mouseDown = false; });
+canvas.addEventListener('mouseleave', () => { mouseDown = false; });
+
+canvas.addEventListener('touchstart', e => { e.preventDefault(); mouseDown = true; const p = getPos(e.touches[0]); paint(p.x, p.y); }, {passive: false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); if (mouseDown) { const p = getPos(e.touches[0]); paint(p.x, p.y); } }, {passive: false});
+canvas.addEventListener('touchend', () => { mouseDown = false; });
+
+// ── Main loop ─────────────────────────────────────────────────
+let lastTime = performance.now();
+let frameCount = 0;
+let fpsDisplay = 0;
+
+function loop(time) {
+  frameCount++;
+  if (time - lastTime >= 1000) {
+    fpsDisplay = Math.round(frameCount / ((time - lastTime) / 1000));
+    frameCount = 0;
+    lastTime = time;
+  }
+
+  for (let s = 0; s < simSpeed; s++) step();
+  render();
+
+  document.getElementById('fps').textContent = 'FPS: ' + fpsDisplay;
+  document.getElementById('step').textContent = 'Step: ' + steps;
+
+  requestAnimationFrame(loop);
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const idx = parseInt(e.key);
+  if (idx >= 1 && idx <= 8) {
+    const p = presets[idx - 1];
+    document.getElementById('f-slider').value = p.f;
+    document.getElementById('k-slider').value = p.k;
+    document.getElementById('fv').textContent = p.f.toFixed(3);
+    document.getElementById('kv').textContent = p.k.toFixed(3);
+    document.querySelectorAll('#presets button').forEach((b, i) => b.classList.toggle('active', i === idx - 1));
+    resetGrid(p.f, p.k);
+  }
+  if (e.key === 'c') {
+    resetGrid(feed, kill);
+  }
+});
+
+// ── Go! ───────────────────────────────────────────────────────
+buildColorsUI();
+buildPresetsUI();
+resetGrid(feed, kill);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

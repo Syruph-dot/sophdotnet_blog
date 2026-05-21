@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASCII Webcam 🎥🔤</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Courier New', monospace;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+body.light {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+/* Header */
+header {
+  width: 100%;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid #222;
+}
+body.light header { border-color: #ddd; }
+header h1 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+header h1 span { opacity: 0.6; font-size: 0.9rem; }
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.controls label { font-size: 0.8rem; opacity: 0.7; }
+.controls input[type=range] { width: 80px; accent-color: #0f0; }
+.controls select {
+  background: #1a1a1a; color: #e0e0e0; border: 1px solid #333;
+  padding: 4px 8px; border-radius: 4px; font-family: inherit; font-size: 0.8rem;
+}
+body.light .controls select { background: #fff; color: #1a1a1a; border-color: #ccc; }
+.btn {
+  background: #1a1a1a; color: #e0e0e0; border: 1px solid #333;
+  padding: 5px 12px; border-radius: 4px; cursor: pointer;
+  font-family: inherit; font-size: 0.8rem; transition: all 0.2s;
+}
+.btn:hover { background: #333; border-color: #0f0; }
+.btn.active { background: #0f0; color: #000; border-color: #0f0; }
+body.light .btn { background: #eee; color: #1a1a1a; border-color: #ccc; }
+body.light .btn:hover { background: #ddd; }
+body.light .btn.active { background: #0a0; color: #fff; }
+
+/* ASCII display */
+#ascii-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+#ascii-output {
+  white-space: pre;
+  font-family: 'Courier New', 'SimSun', monospace;
+  line-height: 1;
+  letter-spacing: 0;
+  font-size: clamp(4px, 1vw, 10px);
+  text-align: center;
+  overflow: auto;
+  max-width: 100%;
+  max-height: 80vh;
+  user-select: none;
+}
+body.light #ascii-output { filter: none; }
+
+/* Hidden elements */
+#video { display: none; }
+#canvas { display: none; }
+
+/* Status bar */
+#status {
+  width: 100%;
+  padding: 8px 20px;
+  border-top: 1px solid #222;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+body.light #status { border-color: #ddd; }
+.dim { opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎥 ASCII Webcam <span>| 实时字符画</span></h1>
+  <div class="controls">
+    <label>分辨率</label>
+    <input type="range" id="resolution" min="20" max="160" value="80" title="字符列数">
+    <label>对比度</label>
+    <input type="range" id="contrast" min="1" max="5" step="0.5" value="2" title="对比度">
+    <select id="charset" title="字符集">
+      <option value="full" selected>完整字符</option>
+      <option value="simple">简单 (10级)</option>
+      <option value="blocks">方块 ░▒▓█</option>
+      <option value="binary">二进制 01</option>
+      <option value="braille">盲文 ⠁⠃⠇</option>
+    </select>
+    <button class="btn" id="themeBtn" title="切换主题">🌓</button>
+    <button class="btn" id="pauseBtn" title="暂停">⏯️</button>
+    <button class="btn" id="snapBtn" title="截图">📸</button>
+  </div>
+</header>
+
+<div id="ascii-container">
+  <pre id="ascii-output">⏳ 正在请求摄像头权限...</pre>
+</div>
+
+<div id="status">
+  <span id="fps">FPS: --</span>
+  <span id="res-info">80 cols</span>
+  <span>🎲 RandomHunt #6</span>
+</div>
+
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<script>
+// ── DOM ──
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const output = document.getElementById('ascii-output');
+const fpsEl = document.getElementById('fps');
+const resInfo = document.getElementById('res-info');
+
+const resolutionSlider = document.getElementById('resolution');
+const contrastSlider = document.getElementById('contrast');
+const charsetSelect = document.getElementById('charset');
+
+// ── Character sets ──
+const CHARSETS = {
+  full: '@%#*+=-:. ',
+  simple: '@#+=. ',
+  blocks: '█▓▒░ ',
+  binary: '10 ',
+  braille: '⣿⣷⣧⣇⡇⠇⠁ '
+};
+
+// ── State ──
+let cols = 80;
+let contrast = 2;
+let charset = 'full';
+let paused = false;
+let themeLight = false;
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let animationId;
+
+// ── Camera ──
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    output.textContent = '';
+    requestAnimationFrame(processFrame);
+  } catch (err) {
+    output.textContent = '❌ 无法访问摄像头\n\n' + err.message + '\n\n请确保已授予摄像头权限。';
+  }
+}
+
+// ── ASCII conversion ──
+function toAscii(imageData, vw, vh) {
+  const chars = CHARSETS[charset] || CHARSETS.full;
+  const charLen = chars.length;
+  const pixels = imageData.data;
+
+  const rows = Math.floor(cols * (vh / vw) * 0.45);
+  const blockW = vw / cols;
+  const blockH = vh / rows;
+  let result = '';
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      let sum = 0, count = 0;
+      const sx = Math.floor(col * blockW);
+      const ex = Math.floor(Math.min((col + 1) * blockW, vw));
+      const sy = Math.floor(row * blockH);
+      const ey = Math.floor(Math.min((row + 1) * blockH, vh));
+
+      for (let py = sy; py < ey; py++) {
+        for (let px = sx; px < ex; px++) {
+          const i = (py * vw + px) * 4;
+          sum += 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+          count++;
+        }
+      }
+
+      let brightness = count > 0 ? sum / count / 255 : 0;
+      brightness = Math.pow(brightness, 1 / contrast);
+      brightness = Math.max(0, Math.min(1, brightness));
+      result += chars[Math.floor(brightness * (charLen - 1))];
+    }
+    result += '\n';
+  }
+  return result;
+}
+
+// ── Frame processing ──
+function processFrame() {
+  if (paused) return;
+
+  const vw = video.videoWidth || 640;
+  const vh = video.videoHeight || 480;
+  const rows = Math.floor(cols * (vh / vw) * 0.45);
+
+  canvas.width = vw;
+  canvas.height = vh;
+  ctx.drawImage(video, 0, 0, vw, vh);
+
+  const imageData = ctx.getImageData(0, 0, vw, vh);
+  output.textContent = toAscii(imageData, vw, vh);
+
+  // FPS
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    fpsEl.textContent = `FPS: ${frameCount}`;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+
+  resInfo.textContent = `${cols} x ${rows}`;
+
+  animationId = requestAnimationFrame(processFrame);
+}
+
+// ── Screenshot ──
+function takeScreenshot() {
+  // Create a temporary canvas with the ASCII art
+  const asciiText = output.textContent;
+  const lines = asciiText.split('\n').filter(l => l.length > 0);
+
+  const fontSize = 12;
+  const tmpCanvas = document.createElement('canvas');
+  const tmpCtx = tmpCanvas.getContext('2d');
+  tmpCtx.font = `${fontSize}px 'Courier New', monospace`;
+
+  const textWidth = Math.max(...lines.map(l => tmpCtx.measureText(l).width));
+  const textHeight = lines.length * fontSize;
+  tmpCanvas.width = textWidth + 40;
+  tmpCanvas.height = textHeight + 40;
+
+  tmpCtx.fillStyle = themeLight ? '#f5f5f5' : '#0a0a0a';
+  tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+  tmpCtx.fillStyle = themeLight ? '#1a1a1a' : '#e0e0e0';
+  tmpCtx.font = `${fontSize}px 'Courier New', monospace`;
+  tmpCtx.textBaseline = 'top';
+
+  lines.forEach((line, i) => {
+    tmpCtx.fillText(line, 20, 20 + i * fontSize);
+  });
+
+  const link = document.createElement('a');
+  link.download = `ascii-webcam-${Date.now()}.png`;
+  link.href = tmpCanvas.toDataURL('image/png');
+  link.click();
+}
+
+// ── Controls ──
+resolutionSlider.addEventListener('input', () => {
+  cols = parseInt(resolutionSlider.value);
+});
+
+contrastSlider.addEventListener('input', () => {
+  contrast = parseFloat(contrastSlider.value);
+});
+
+charsetSelect.addEventListener('change', () => {
+  charset = charsetSelect.value;
+});
+
+document.getElementById('pauseBtn').addEventListener('click', function() {
+  paused = !paused;
+  this.classList.toggle('active', paused);
+  if (!paused) {
+    animationId = requestAnimationFrame(processFrame);
+  }
+});
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  themeLight = !themeLight;
+  document.body.classList.toggle('light', themeLight);
+});
+
+document.getElementById('snapBtn').addEventListener('click', takeScreenshot);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  switch (e.key.toLowerCase()) {
+    case ' ': e.preventDefault(); paused = !paused;
+      document.getElementById('pauseBtn').classList.toggle('active', paused);
+      if (!paused) animationId = requestAnimationFrame(processFrame);
+      break;
+    case 's': takeScreenshot(); break;
+    case 't': themeLight = !themeLight; document.body.classList.toggle('light', themeLight); break;
+  }
+});
+
+// ── Start ──
+startCamera();
+</script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 粒子引力游乐场</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100vh; overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  #controls {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; align-items: center; z-index: 10;
+    flex-wrap: wrap; justify-content: center;
+  }
+  button, .toggle {
+    padding: 8px 20px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(20,20,40,0.85); color: #ccc; border-radius: 8px;
+    cursor: pointer; font-size: 14px; backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  button:hover { background: rgba(60,60,100,0.85); color: #fff; border-color: rgba(255,255,255,0.5); }
+  button.active { background: rgba(100,80,200,0.8); color: #fff; border-color: #8b7cf0; }
+  .toggle.active { background: rgba(100,80,200,0.8); color: #fff; border-color: #8b7cf0; }
+  #stats {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.5); font-size: 13px; z-index: 10;
+  }
+  #themeLabel {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: rgba(255,255,255,0.85); font-size: 32px; font-weight: 700;
+    pointer-events: none; z-index: 5; opacity: 0;
+    text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    transition: opacity 0.15s;
+  }
+  canvas { display: block; cursor: crosshair; }
+</style>
+</head>
+<body>
+<div id="controls">
+  <button id="btnClear" title="清空所有粒子 (空格键)">🧹 清空</button>
+  <button id="btnGravity" class="toggle active" title="切换引力">🌍 引力: 开</button>
+  <button id="btnCollision" class="toggle active" title="切换粒子碰撞">💥 碰撞: 开</button>
+  <button id="btnTrails" title="切换轨迹模式">✨ 轨迹</button>
+  <button id="btnFireworks" title="烟花模式">🎆 烟花</button>
+  <button id="btnAttractor" title="吸引子 (Shift+点击放置/移除)">🌀 吸引子</button>
+  <button id="btnTheme" title="切换颜色主题 (R键)">🎨 主题</button>
+</div>
+<canvas id="canvas"></canvas>
+<div id="themeLabel"></div>
+<div id="stats"></div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+let particles = [];
+let mouse = { x: 0, y: 0, down: false };
+let draggedParticle = null;
+let gravityOn = true;
+let collisionOn = true;
+let trailsMode = false;
+
+// Attractor system
+let attractorOn = false;
+let attractors = [];
+const ATTRACTOR_STRENGTH = 600;
+
+// Color themes
+const THEMES = [
+  { name: '🌈 随机', hue: [0, 360], sat: [60, 100], light: [50, 75] },
+  { name: '💜 霓虹', hue: [180, 360], sat: [80, 100], light: [55, 75] },
+  { name: '🔥 烈焰', hue: [0, 45], sat: [80, 100], light: [45, 65] },
+  { name: '🌊 海洋', hue: [180, 240], sat: [50, 90], light: [45, 70] },
+  { name: '🌿 森林', hue: [80, 160], sat: [50, 90], light: [35, 60] },
+  { name: '🌸 柔彩', hue: [0, 360], sat: [30, 60], light: [65, 85] },
+  { name: '⬜ 单色', hue: [200, 220], sat: [10, 40], light: [40, 80] },
+];
+let themeIndex = 0;
+let currentTheme = THEMES[0];
+let themeLabelTimer = 0;
+const GRAVITY = 0.3;
+const FRICTION = 0.999;
+const BOUNCE = 0.7;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+  constructor(x, y, r, vx, vy) {
+    this.x = x; this.y = y;
+    this.r = r || 8 + Math.random() * 16;
+    this.vx = vx || (Math.random() - 0.5) * 4;
+    this.vy = vy || (Math.random() - 0.5) * 4;
+    this.mass = this.r * this.r * Math.PI;
+    this.hue = Math.random() * 360;
+    this.saturation = 60 + Math.random() * 40;
+    this.lightness = 50 + Math.random() * 25;
+    this.glow = 0.15 + Math.random() * 0.25;
+  }
+
+  update() {
+    if (this === draggedParticle) return;
+
+    if (gravityOn) this.vy += GRAVITY;
+    this.vx *= FRICTION;
+    this.vy *= FRICTION;
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Wall collision
+    if (this.x - this.r < 0) { this.x = this.r; this.vx *= -BOUNCE; }
+    if (this.x + this.r > W) { this.x = W - this.r; this.vx *= -BOUNCE; }
+    if (this.y - this.r < 0) { this.y = this.r; this.vy *= -BOUNCE; }
+    if (this.y + this.r > H) { this.y = H - this.r; this.vy *= -BOUNCE; }
+  }
+
+  draw(ctx) {
+    // Outer glow
+    const gradient = ctx.createRadialGradient(this.x, this.y, this.r * 0.3, this.x, this.y, this.r * 1.8);
+    gradient.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, 0.9)`);
+    gradient.addColorStop(0.5, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.glow})`);
+    gradient.addColorStop(1, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, 0)`);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r * 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 10}%, 0.85)`;
+    ctx.fill();
+
+    // Highlight
+    const hlGrad = ctx.createRadialGradient(this.x - this.r * 0.25, this.y - this.r * 0.25, 0, this.x, this.y, this.r);
+    hlGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
+    hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = hlGrad;
+    ctx.fill();
+  }
+
+  contains(px, py) {
+    return Math.hypot(px - this.x, py - this.y) < this.r + 4;
+  }
+}
+
+function resolveCollision(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const dist = Math.hypot(dx, dy);
+  const minDist = a.r + b.r;
+  if (dist >= minDist || dist === 0) return;
+
+  // Normal and tangent
+  const nx = dx / dist, ny = dy / dist;
+  const tx = -ny, ty = nx;
+
+  // Separate
+  const overlap = minDist - dist;
+  const totalMass = a.mass + b.mass;
+  a.x -= nx * (overlap * b.mass / totalMass);
+  a.y -= ny * (overlap * b.mass / totalMass);
+  b.x += nx * (overlap * a.mass / totalMass);
+  b.y += ny * (overlap * a.mass / totalMass);
+
+  // Velocity along normal
+  const vnA = a.vx * nx + a.vy * ny;
+  const vnB = b.vx * nx + b.vy * ny;
+  const vtA = a.vx * tx + a.vy * ty;
+  const vtB = b.vx * tx + b.vy * ty;
+
+  // Elastic collision along normal
+  const newVnA = (vnA * (a.mass - b.mass) + 2 * b.mass * vnB) / totalMass;
+  const newVnB = (vnB * (b.mass - a.mass) + 2 * a.mass * vnA) / totalMass;
+
+  a.vx = newVnA * nx + vtA * tx;
+  a.vy = newVnA * ny + vtA * ty;
+  b.vx = newVnB * nx + vtB * tx;
+  b.vy = newVnB * ny + vtB * ty;
+}
+
+// === Theme helpers ===
+function cycleTheme() {
+  themeIndex = (themeIndex + 1) % THEMES.length;
+  currentTheme = THEMES[themeIndex];
+  retintAllParticles();
+  showThemeLabel(currentTheme.name);
+}
+
+function randH() {
+  const [min, max] = currentTheme.hue;
+  return min + Math.random() * (max - min);
+}
+function randS() {
+  const [min, max] = currentTheme.sat;
+  return min + Math.random() * (max - min);
+}
+function randL() {
+  const [min, max] = currentTheme.light;
+  return min + Math.random() * (max - min);
+}
+
+function retintAllParticles() {
+  for (const p of particles) {
+    p.hue = randH();
+    p.saturation = randS();
+    p.lightness = randL();
+  }
+}
+
+function showThemeLabel(text) {
+  const el = document.getElementById('themeLabel');
+  el.textContent = text;
+  el.style.opacity = '1';
+  themeLabelTimer = 70;
+}
+
+// === Attractor ===
+class Attractor {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.mass = 40;
+    this.radius = 28;
+    this.pulse = 0;
+    this.hue = 40 + Math.random() * 20;
+  }
+  update(time) {
+    this.pulse = Math.sin(time * 0.003) * 0.3 + 0.7;
+  }
+  draw(ctx) {
+    const r = this.radius * this.pulse;
+    for (let i = 2; i >= 0; i--) {
+      const ringR = r * (1 + i * 0.5);
+      const alpha = 0.08 * (1 - i * 0.25);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, ringR, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsla(${this.hue}, 80%, 60%, ${alpha})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r);
+    g.addColorStop(0, `hsla(${this.hue}, 80%, 70%, 0.9)`);
+    g.addColorStop(0.5, `hsla(${this.hue}, 80%, 50%, 0.4)`);
+    g.addColorStop(1, `hsla(${this.hue}, 80%, 40%, 0)`);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fill();
+  }
+  applyForce(p) {
+    const dx = this.x - p.x;
+    const dy = this.y - p.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1) return;
+    const softening = 20;
+    const force = (ATTRACTOR_STRENGTH * this.mass * p.mass) / (dist * dist + softening);
+    const fx = (force / dist) * dx;
+    const fy = (force / dist) * dy;
+    p.vx += fx; p.vy += fy;
+  }
+}
+
+function spawnParticle(x, y, r, vx, vy) {
+  const p = new Particle(x, y, r || undefined, vx || undefined, vy || undefined);
+  particles.push(p);
+  return p;
+}
+
+function fireworks() {
+  const cx = W / 2, cy = H / 2;
+  const count = 30 + Math.floor(Math.random() * 30);
+  const baseHue = Math.random() * 360;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.3;
+    const speed = 3 + Math.random() * 6;
+    const p = new Particle(cx, cy, 3 + Math.random() * 8, Math.cos(angle) * speed, Math.sin(angle) * speed);
+    p.hue = baseHue + (Math.random() - 0.5) * 40;
+    particles.push(p);
+  }
+}
+
+canvas.addEventListener('mousedown', e => {
+  mouse.down = true;
+  mouse.x = e.clientX; mouse.y = e.clientY;
+
+  // Check if clicking on a particle
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (particles[i].contains(mouse.x, mouse.y)) {
+      draggedParticle = particles[i];
+      return;
+    }
+  }
+  // Spawn
+  spawnParticle(mouse.x, mouse.y);
+});
+
+canvas.addEventListener('mousemove', e => {
+  mouse.x = e.clientX; mouse.y = e.clientY;
+  if (draggedParticle) {
+    draggedParticle.x = mouse.x;
+    draggedParticle.y = mouse.y;
+    draggedParticle.vx = 0;
+    draggedParticle.vy = 0;
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (draggedParticle) {
+    draggedParticle.vx = (Math.random() - 0.5) * 3;
+    draggedParticle.vy = (Math.random() - 0.5) * 3;
+    draggedParticle = null;
+  }
+  mouse.down = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  if (draggedParticle) {
+    draggedParticle.vx = (Math.random() - 0.5) * 3;
+    draggedParticle.vy = (Math.random() - 0.5) * 3;
+    draggedParticle = null;
+  }
+  mouse.down = false;
+});
+
+document.addEventListener('keydown', e => {
+  switch(e.code) {
+    case 'Space': e.preventDefault(); particles = []; break;
+    case 'KeyG': gravityOn = !gravityOn; updateToggle('btnGravity', '🌍 引力', gravityOn); break;
+    case 'KeyC': collisionOn = !collisionOn; updateToggle('btnCollision', '💥 碰撞', collisionOn); break;
+    case 'KeyT': trailsMode = !trailsMode; updateToggle('btnTrails', '✨ 轨迹', trailsMode); break;
+    case 'KeyF': fireworks(); break;
+  }
+});
+
+function updateToggle(id, label, state) {
+  const btn = document.getElementById(id);
+  btn.textContent = `${label}: ${state ? '开' : '关'}`;
+  btn.classList.toggle('active', state);
+}
+
+document.getElementById('btnClear').addEventListener('click', () => { particles = []; });
+document.getElementById('btnGravity').addEventListener('click', () => { gravityOn = !gravityOn; updateToggle('btnGravity', '🌍 引力', gravityOn); });
+document.getElementById('btnCollision').addEventListener('click', () => { collisionOn = !collisionOn; updateToggle('btnCollision', '💥 碰撞', collisionOn); });
+document.getElementById('btnTrails').addEventListener('click', () => { trailsMode = !trailsMode; updateToggle('btnTrails', '✨ 轨迹', trailsMode); });
+document.getElementById('btnFireworks').addEventListener('click', fireworks);
+
+// Spawn initial particles
+for (let i = 0; i < 15; i++) {
+  spawnParticle(Math.random() * W, Math.random() * H * 0.5);
+}
+
+function loop() {
+  if (!trailsMode) {
+    ctx.fillStyle = 'rgba(10, 10, 15, 0.15)';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Update
+  for (const p of particles) p.update();
+
+  // Collisions
+  if (collisionOn) {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        resolveCollision(particles[i], particles[j]);
+      }
+    }
+  }
+
+  // Draw
+  for (const p of particles) p.draw(ctx);
+
+  // Dragged particle indicator
+  if (draggedParticle) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(draggedParticle.x, draggedParticle.y, draggedParticle.r + 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Stats
+  document.getElementById('stats').textContent = `粒子: ${particles.length} | 拖拽 | 空格清空 | G引力 C碰撞 T轨迹 F烟花`;
+
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
