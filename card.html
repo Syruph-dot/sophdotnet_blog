@@ -37,14 +37,23 @@
         }
 
         .retro-shell {
+            position: relative;
             width: min(960px, calc(100% - 24px));
             margin: 18px auto 36px;
             border: 1px solid var(--grid-line);
-            background:
-                linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)),
-                url('images/banner4t3-1.PNG') center / cover no-repeat;
-            background-color: var(--grid-white);
+            background: var(--grid-white);
             box-shadow: 0 1px 0 #fff inset, 0 2px 6px rgba(0,0,0,0.13);
+            z-index: 0;
+        }
+
+        .retro-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('images/banner4t3-1.PNG') center / cover no-repeat;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .retro-toolbar {
