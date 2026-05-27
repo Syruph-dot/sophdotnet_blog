@@ -5,14 +5,17 @@ const test = require('node:test');
 
 test('retro card page contains the requested profile and 2013-style constraints', async () => {
     const html = await fs.readFile(path.join(__dirname, '..', 'card.html'), 'utf8');
+    const css = await fs.readFile(path.join(__dirname, '..', 'css', 'syrretro.css'), 'utf8');
 
     assert.match(html, /Syruph_dot/);
     assert.match(html, /东方Project、BA/);
     assert.match(html, /电气工程及其自动化/);
     assert.match(html, /想玩硬件，设计电路焊电路，但是完全没空（笑/);
-    assert.match(html, /FangSong/);
     assert.match(html, /data-rgb-grid="16x16x16"/);
-    assert.match(html, /linear-gradient/);
+    assert.match(html, /href="css\/syrretro\.css/);
+    assert.doesNotMatch(html, /<style\b/i);
+    assert.match(css, /FangSong/);
+    assert.match(css, /linear-gradient/);
 });
 
 test('shared navigation links to the retro card page', async () => {
@@ -24,9 +27,9 @@ test('shared navigation links to the retro card page', async () => {
 });
 
 test('retro card page keeps CSS colors on the 16-step RGB grid', async () => {
-    const html = await fs.readFile(path.join(__dirname, '..', 'card.html'), 'utf8');
-    const hexColors = html.match(/#[0-9a-fA-F]{3,6}\b/g) || [];
-    const alphaValues = [...html.matchAll(/rgba\([^,]+,[^,]+,[^,]+,([0-9.]+)\)/g)]
+    const css = await fs.readFile(path.join(__dirname, '..', 'css', 'syrretro.css'), 'utf8');
+    const hexColors = css.match(/#[0-9a-fA-F]{3,6}\b/g) || [];
+    const alphaValues = [...css.matchAll(/rgba\([^,]+,[^,]+,[^,]+,([0-9.]+)\)/g)]
         .map((match) => Number(match[1]));
     const isGridHex = (color) => {
         const hex = color.slice(1).toLowerCase();
