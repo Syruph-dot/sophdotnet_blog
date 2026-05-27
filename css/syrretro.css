@@ -17,6 +17,7 @@
     --kyk-blue-light:#9ac;
     --kyk-blue-mid:#467;
     --kyk-blue-dark:#347;
+    --kyk-yellow:#fd8;
 
     --airi-skyblue:#9cc;
     --airi-mint:#4eb;
@@ -289,6 +290,24 @@ body {
 .swatch.blue { background: #39c; }
 .swatch.red { background: #c33; }
 .swatch.orange { background: #f90; }
+.swatch.kyk-white { background: var(--kyk-white); }
+.swatch.kyk-black { background: var(--kyk-black); }
+.swatch.kyk-pink-light { background: var(--kyk-pink-light); }
+.swatch.kyk-pink-dark { background: var(--kyk-pink-dark); }
+.swatch.kyk-blue-light { background: var(--kyk-blue-light); }
+.swatch.kyk-blue-mid { background: var(--kyk-blue-mid); }
+.swatch.kyk-blue-dark { background: var(--kyk-blue-dark); }
+.swatch.kyk-yellow { background: var(--kyk-yellow); }
+.swatch.airi-skyblue { background: var(--airi-skyblue); }
+.swatch.airi-mint { background: var(--airi-mint); }
+.swatch.airi-fraybrown-light { background: var(--airi-fraybrown-light); }
+.swatch.airi-fraybrown-dark { background: var(--airi-fraybrown-dark); }
+.swatch.airi-blue-light { background: var(--airi-blue-light); }
+.swatch.airi-blue-1 { background: var(--airi-blue-1); }
+.swatch.airi-blue-2 { background: var(--airi-blue-2); }
+.swatch.airi-blue-3 { background: var(--airi-blue-3); }
+.swatch.airi-blue-4 { background: var(--airi-blue-4); }
+.swatch.airi-blue-dark { background: var(--airi-blue-dark); }
 
 .aside-list {
     padding: 8px 10px;

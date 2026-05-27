@@ -12,7 +12,8 @@ test('retro card page contains the requested profile and 2013-style constraints'
     assert.match(html, /电气工程及其自动化/);
     assert.match(html, /想玩硬件，设计电路焊电路，但是完全没空（笑/);
     assert.match(html, /data-rgb-grid="16x16x16"/);
-    assert.match(html, /href="css\/syrretro\.css/);
+    assert.match(html, /href="css\/mobile-framework\.css/);
+    assert.doesNotMatch(html, /href="css\/syrretro\.css/);
     assert.doesNotMatch(html, /<style\b/i);
     assert.match(css, /FangSong/);
     assert.match(css, /linear-gradient/);
