@@ -335,6 +335,29 @@
                 font-size: 28px;
             }
         }
+
+        /* ===== IE11 FALLBACKS ===== */
+        @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+            body { color: #333; }
+            .retro-shell { border-color: #ccc; background: #fff; }
+            .retro-toolbar { border-bottom-color: #ccc; }
+            .retro-toolbar a { color: #06c; }
+            .retro-side { border-right-color: #ddd; }
+            .retro-aside { border-left-color: #ddd; }
+            .side-note { border-color: #ccc; }
+            .profile-head { border-bottom-color: #ccc; }
+            .profile-id { color: #777; }
+            .meta-row span { border-right-color: #ccc; }
+            .profile-section { border-color: #ccc; }
+            .section-title { border-bottom-color: #ccc; }
+            .interest-list li { border-bottom-color: #ccc; }
+            .weibo-actions { border-top-color: #ddd; }
+            .weibo-actions span { border-right-color: #ccc; }
+            .aside-block { border-color: #ccc; }
+            .aside-title { border-bottom-color: #ccc; }
+            .aside-list a { color: #06c; }
+            .retro-footer { border-top-color: #ccc; }
+        }
     </style>
 </head>
 <body class="theme-c">

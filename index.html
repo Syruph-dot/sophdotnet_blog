@@ -36,6 +36,7 @@
             left: 0;
             right: 0;
             bottom: 0;
+            background-image: url('images/banner4t3-1.PNG'); /* IE11 fallback — static */
             background-image: var(--bg-image, linear-gradient(135deg, #e0e0e0, #f0f0f0));
             background-size: cover;
             background-position: center;
@@ -85,7 +86,9 @@
             font-size: 12px;
         }
         .column-icon.icon-image a {
-            display: contents;
+            display: block;
+            width: 100%;
+            height: 100%;
             color: inherit;
             text-decoration: none;
         }
@@ -96,7 +99,9 @@
             /* background 由内联 style 设定，支持纯色或渐变 */
         }
         .column-icon.icon-firstchar a {
-            display: contents;
+            display: block;
+            width: 100%;
+            height: 100%;
             color: inherit;
             text-decoration: none;
         }
@@ -341,7 +346,7 @@
                     <img src="images/banner4t3-1.PNG" alt="Banner 1">
                 </div>
                 <div class="slide">
-                    <img src="images/banner-2.webp" alt="Banner 2">
+                    <img src="images/banner-2.webp" alt="Banner 2" onerror="this.src='images/banner-artifact-1.png'">
                 </div>
                 <div class="slide">
                     <img src="images/banner-artifact-1.png" alt="Banner 3">
@@ -506,6 +511,13 @@
                     input.addEventListener('input', updateSlider);
                     updateSlider();
                 });
+            }
+
+            // IE11 兼容性补丁：SVG filter 在 IE11 不支持，禁用
+            if (navigator.userAgent.indexOf('Trident/') > -1) {
+                var ieCss = document.createElement('style');
+                ieCss.textContent = '.custom-slider-left, .custom-slider-right { filter: none; }';
+                document.head.appendChild(ieCss);
             }
 
             document.addEventListener('DOMContentLoaded', function() {

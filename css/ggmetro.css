@@ -174,3 +174,16 @@ text.ContributionCalendar-label {
 .day-tooltip:after {
   border-top-color: var(--gg-tooltip-bg);
 }
+
+/* ===== IE11 FALLBACKS ===== */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .calendar {
+    background: linear-gradient(180deg, #a0a0a0, #575757) !important;
+  }
+  .github-calendar .day[data-level="0"] { background-color: #f0fdfa; }
+  .github-calendar .day[data-level="1"] { background-color: #99f6e4; }
+  .github-calendar .day[data-level="2"] { background-color: #2dd4bf; }
+  .github-calendar .day[data-level="3"] { background-color: #0d9488; }
+  .github-calendar .day[data-level="4"] { background-color: #115e59; }
+  .day-tooltip { background: #efe9e7; }
+}
